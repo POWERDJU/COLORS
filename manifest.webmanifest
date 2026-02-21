@@ -1,0 +1,22 @@
+{
+  "name": "알록달록 색칠놀이",
+  "short_name": "색칠놀이",
+  "description": "어린이를 위한 색칠공부 웹 앱",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#5e76d6",
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

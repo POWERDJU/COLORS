@@ -1,0 +1,200 @@
+﻿<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎨 알록달록 색칠놀이</title>
+    <meta name="description" content="아이들을 위한 재미있는 색칠놀이 프로그램">
+    <meta name="theme-color" content="#5e76d6">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="색칠놀이">
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="icon" href="favicon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="icons/icon-192.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <!-- 메인 화면 -->
+    <div id="main-screen" class="screen active">
+        <div class="rainbow-header">
+            <h1>🎨 알록달록 색칠놀이</h1>
+            <p class="subtitle">재미있는 그림에 예쁜 색을 칠해보세요!</p>
+        </div>
+
+        <div class="level-container">
+            <div class="level-card level-1" onclick="selectLevel(1)">
+                <div class="level-icon">🐣</div>
+                <div class="level-info">
+                    <h2>1단계</h2>
+                    <span class="difficulty">⭐</span>
+                </div>
+                <div class="level-preview">
+                    <span>쉬운 그림</span>
+                </div>
+            </div>
+
+            <div class="level-card level-2" onclick="selectLevel(2)">
+                <div class="level-icon">🧒</div>
+                <div class="level-info">
+                    <h2>2단계</h2>
+                    <span class="difficulty">⭐⭐</span>
+                </div>
+                <div class="level-preview">
+                    <span>재미있는 그림</span>
+                </div>
+            </div>
+
+            <div class="level-card level-3" onclick="selectLevel(3)">
+                <div class="level-icon">👦</div>
+                <div class="level-info">
+                    <h2>3단계</h2>
+                    <span class="difficulty">⭐⭐⭐</span>
+                </div>
+                <div class="level-preview">
+                    <span>멋진 그림</span>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- 갤러리 화면 -->
+    <div id="gallery-screen" class="screen">
+        <div class="gallery-header">
+            <button class="back-btn" onclick="goToMain()">
+                <span>←</span> 돌아가기
+            </button>
+            <h2 id="gallery-title">그림 선택</h2>
+        </div>
+
+        <div class="gallery-grid" id="gallery-grid">
+            <!-- 이미지 카드들이 여기에 동적으로 추가됨 -->
+        </div>
+    </div>
+
+    <!-- 색칠 화면 -->
+    <div id="coloring-screen" class="screen">
+        <div class="coloring-header">
+            <button class="back-btn" onclick="goToGallery()">
+                <span>←</span> 그림 선택
+            </button>
+            <h2 id="coloring-title">색칠하기</h2>
+            <button class="save-btn" onclick="saveImage()">
+                <span>💾</span> 완성! 저장하기
+            </button>
+        </div>
+
+        <div class="coloring-container">
+            <div class="canvas-wrapper">
+                <!-- 색칠용 캔버스 (아래 레이어) -->
+                <canvas id="coloring-canvas"></canvas>
+                <!-- 윤곽선용 캔버스 (위 레이어, 터치 통과) -->
+                <canvas id="outline-canvas"></canvas>
+            </div>
+
+            <div class="tools-panel">
+                <div class="tool-toolbar" id="tool-buttons-section">
+                    <div class="tool-buttons">
+                        <button class="tool-btn active" id="brush-tool" onclick="selectTool('brush')" title="브러시" aria-label="브러시">
+                            <span>🖌️</span>
+                            <label>브러시</label>
+                        </button>
+                        <button class="tool-btn" id="marker-tool" onclick="selectTool('marker')" title="싸인펜" aria-label="싸인펜">
+                            <span>🖊️</span>
+                            <label>싸인펜</label>
+                        </button>
+                        <button class="tool-btn" id="blowpen-tool" onclick="selectTool('blowpen')" title="불어펜" aria-label="불어펜">
+                            <span>💨</span>
+                            <label>불어펜</label>
+                        </button>
+                        <button class="tool-btn" id="paintbomb-tool" onclick="selectTool('paintbomb')" title="물감폭탄" aria-label="물감폭탄">
+                            <span>💣</span>
+                            <label>물감폭탄</label>
+                        </button>
+                        <button class="tool-btn" id="stamp-tool" onclick="selectTool('stamp')" title="스탬프" aria-label="스탬프">
+                            <span>💟</span>
+                            <label>스탬프</label>
+                        </button>
+                        <button class="tool-btn" id="rainbow-tool" onclick="selectTool('rainbow')" title="무지개 펜" aria-label="무지개 펜">
+                            <span>🌈</span>
+                            <label>무지개 펜</label>
+                        </button>
+                        <button class="tool-btn" id="eraser-tool" onclick="selectTool('eraser')" title="지우개" aria-label="지우개">
+                            <span>🧽</span>
+                            <label>지우개</label>
+                        </button>
+                        <button class="tool-btn" id="glitter-tool" onclick="selectTool('glitter')" title="반짝이풀" aria-label="반짝이풀">
+                            <span>✨</span>
+                            <label>반짝이풀</label>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="tool-options-drawer collapsed" id="tool-options-drawer">
+                    <div class="tool-options-header">
+                        <h3 id="tool-options-title">도구 옵션</h3>
+                        <button class="tool-options-toggle-btn" id="tool-options-toggle-btn" onclick="toggleToolOptions()">
+                            접기
+                        </button>
+                    </div>
+
+                    <div class="tool-options-content" id="tool-options-content">
+                        <div class="tool-section tool-option-section" id="color-section">
+                            <h3>🎨 색상 선택</h3>
+                            <div class="color-palette" id="color-palette">
+                                <!-- 색상 버튼들이 여기에 추가됨 -->
+                            </div>
+                        </div>
+
+                        <div class="tool-section tool-option-section" id="glitter-palette-section" style="display: none;">
+                            <h3>✨ 반짝이 색상</h3>
+                            <div class="glitter-palette" id="glitter-palette">
+                                <!-- 반짝이 색상 버튼들이 여기에 추가됨 -->
+                            </div>
+                        </div>
+
+                        <div class="tool-section tool-option-section" id="stamp-palette-section" style="display: none;">
+                            <h3>💟 스탬프 선택</h3>
+                            <div class="stamp-palette" id="stamp-palette">
+                                <!-- 스탬프 버튼들이 여기에 추가됨 -->
+                            </div>
+                        </div>
+
+                        <div class="tool-section tool-option-section" id="brush-size-section">
+                            <h3>📏 브러시 크기</h3>
+                            <input type="range" id="brush-size" min="5" max="300" value="20">
+                            <span id="brush-size-label">20px</span>
+                        </div>
+
+                        <div class="tool-section" id="reset-section">
+                            <button class="reset-btn" onclick="resetCanvas()">
+                                <span>🔄</span> 다시 시작
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 저장 완료 모달 -->
+    <div id="save-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-icon">🎉</div>
+            <h2>저장 완료!</h2>
+            <p>그림이 예쁘게 저장되었어요!</p>
+            <button class="modal-btn" onclick="closeSaveModal()">확인</button>
+        </div>
+    </div>
+
+    <script src="app.js?v=20260221h"></script>
+</body>
+
+</html>
