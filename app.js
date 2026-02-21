@@ -302,15 +302,26 @@ function initCanvas(imageData) {
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
         outlineCtx.clearRect(0, 0, outlineCanvas.width, outlineCanvas.height);
-        const drawPadding = 24;
+        const bounds = getImageContentBounds(img);
+        const drawPadding = Math.max(2, Math.round(Math.min(canvasWidth, canvasHeight) * 0.005));
         const fitWidth = Math.max(1, canvasWidth - drawPadding * 2);
         const fitHeight = Math.max(1, canvasHeight - drawPadding * 2);
-        const scale = Math.min(fitWidth / img.width, fitHeight / img.height, 1);
-        const drawWidth = Math.max(1, Math.round(img.width * scale));
-        const drawHeight = Math.max(1, Math.round(img.height * scale));
+        const scale = Math.min(fitWidth / bounds.width, fitHeight / bounds.height);
+        const drawWidth = Math.max(1, Math.round(bounds.width * scale));
+        const drawHeight = Math.max(1, Math.round(bounds.height * scale));
         const drawX = Math.round((canvasWidth - drawWidth) / 2);
         const drawY = Math.round((canvasHeight - drawHeight) / 2);
-        outlineCtx.drawImage(img, drawX, drawY, drawWidth, drawHeight);
+        outlineCtx.drawImage(
+            img,
+            bounds.x,
+            bounds.y,
+            bounds.width,
+            bounds.height,
+            drawX,
+            drawY,
+            drawWidth,
+            drawHeight
+        );
         cacheOutlinePixels();
 
         console.log('Image loaded successfully');
@@ -348,6 +359,88 @@ function initCanvas(imageData) {
     };
 
     img.src = imagePath;
+}
+
+function getImageContentBounds(img) {
+    const fullWidth = Math.max(1, img.width);
+    const fullHeight = Math.max(1, img.height);
+    const maxSampleSide = 1024;
+    const sampleScale = Math.min(1, maxSampleSide / Math.max(fullWidth, fullHeight));
+    const sampleWidth = Math.max(1, Math.round(fullWidth * sampleScale));
+    const sampleHeight = Math.max(1, Math.round(fullHeight * sampleScale));
+
+    const sampleCanvas = document.createElement('canvas');
+    sampleCanvas.width = sampleWidth;
+    sampleCanvas.height = sampleHeight;
+    const sampleCtx = sampleCanvas.getContext('2d', { willReadFrequently: true });
+    if (!sampleCtx) {
+        return { x: 0, y: 0, width: fullWidth, height: fullHeight };
+    }
+    sampleCtx.clearRect(0, 0, sampleWidth, sampleHeight);
+    sampleCtx.drawImage(img, 0, 0, sampleWidth, sampleHeight);
+
+    const data = sampleCtx.getImageData(0, 0, sampleWidth, sampleHeight).data;
+    const alphaThreshold = 8;
+    const nearWhiteThreshold = 245;
+
+    let minX = sampleWidth;
+    let minY = sampleHeight;
+    let maxX = -1;
+    let maxY = -1;
+
+    let alphaMinX = sampleWidth;
+    let alphaMinY = sampleHeight;
+    let alphaMaxX = -1;
+    let alphaMaxY = -1;
+
+    for (let y = 0; y < sampleHeight; y++) {
+        const rowStart = y * sampleWidth * 4;
+        for (let x = 0; x < sampleWidth; x++) {
+            const px = rowStart + x * 4;
+            const r = data[px];
+            const g = data[px + 1];
+            const b = data[px + 2];
+            const alpha = data[px + 3];
+            if (alpha <= alphaThreshold) continue;
+
+            if (x < alphaMinX) alphaMinX = x;
+            if (y < alphaMinY) alphaMinY = y;
+            if (x > alphaMaxX) alphaMaxX = x;
+            if (y > alphaMaxY) alphaMaxY = y;
+
+            const isNearWhite = r >= nearWhiteThreshold && g >= nearWhiteThreshold && b >= nearWhiteThreshold;
+            if (isNearWhite) continue;
+
+            if (x < minX) minX = x;
+            if (y < minY) minY = y;
+            if (x > maxX) maxX = x;
+            if (y > maxY) maxY = y;
+        }
+    }
+
+    // If non-white content was not found, fallback to alpha-only bounds.
+    if (maxX < minX || maxY < minY) {
+        minX = alphaMinX;
+        minY = alphaMinY;
+        maxX = alphaMaxX;
+        maxY = alphaMaxY;
+    }
+
+    if (maxX < minX || maxY < minY) {
+        return { x: 0, y: 0, width: fullWidth, height: fullHeight };
+    }
+
+    const unscaledX = Math.floor(minX / sampleScale);
+    const unscaledY = Math.floor(minY / sampleScale);
+    const unscaledW = Math.ceil((maxX - minX + 1) / sampleScale);
+    const unscaledH = Math.ceil((maxY - minY + 1) / sampleScale);
+
+    const x = Math.max(0, Math.min(fullWidth - 1, unscaledX));
+    const y = Math.max(0, Math.min(fullHeight - 1, unscaledY));
+    const width = Math.max(1, Math.min(fullWidth - x, unscaledW));
+    const height = Math.max(1, Math.min(fullHeight - y, unscaledH));
+
+    return { x, y, width, height };
 }
 
 function getCanvasViewportSize() {
