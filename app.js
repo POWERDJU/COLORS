@@ -306,22 +306,29 @@ function initCanvas(imageData) {
         const drawPadding = Math.max(0, Math.round(Math.min(canvasWidth, canvasHeight) * 0.002));
         const fitWidth = Math.max(1, canvasWidth - drawPadding * 2);
         const fitHeight = Math.max(1, canvasHeight - drawPadding * 2);
-        const scale = Math.min(fitWidth / bounds.width, fitHeight / bounds.height);
+        const shouldRotateForFit = bounds.width > bounds.height && canvasHeight > canvasWidth;
+        const fitSourceWidth = shouldRotateForFit ? bounds.height : bounds.width;
+        const fitSourceHeight = shouldRotateForFit ? bounds.width : bounds.height;
+        const scale = Math.min(fitWidth / fitSourceWidth, fitHeight / fitSourceHeight);
         const drawWidth = Math.max(1, Math.round(bounds.width * scale));
         const drawHeight = Math.max(1, Math.round(bounds.height * scale));
-        const drawX = Math.round((canvasWidth - drawWidth) / 2);
-        const drawY = Math.round((canvasHeight - drawHeight) / 2);
+        outlineCtx.save();
+        outlineCtx.translate(canvasWidth / 2, canvasHeight / 2);
+        if (shouldRotateForFit) {
+            outlineCtx.rotate(Math.PI / 2);
+        }
         outlineCtx.drawImage(
             img,
             bounds.x,
             bounds.y,
             bounds.width,
             bounds.height,
-            drawX,
-            drawY,
+            -drawWidth / 2,
+            -drawHeight / 2,
             drawWidth,
             drawHeight
         );
+        outlineCtx.restore();
         cacheOutlinePixels();
 
         console.log('Image loaded successfully');
