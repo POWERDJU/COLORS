@@ -303,7 +303,7 @@ function initCanvas(imageData) {
 
         outlineCtx.clearRect(0, 0, outlineCanvas.width, outlineCanvas.height);
         const bounds = getImageContentBounds(img);
-        const drawPadding = Math.max(2, Math.round(Math.min(canvasWidth, canvasHeight) * 0.005));
+        const drawPadding = Math.max(0, Math.round(Math.min(canvasWidth, canvasHeight) * 0.002));
         const fitWidth = Math.max(1, canvasWidth - drawPadding * 2);
         const fitHeight = Math.max(1, canvasHeight - drawPadding * 2);
         const scale = Math.min(fitWidth / bounds.width, fitHeight / bounds.height);
@@ -380,55 +380,16 @@ function getImageContentBounds(img) {
     sampleCtx.drawImage(img, 0, 0, sampleWidth, sampleHeight);
 
     const data = sampleCtx.getImageData(0, 0, sampleWidth, sampleHeight).data;
-    const alphaThreshold = 8;
-    const nearWhiteThreshold = 245;
-
-    let minX = sampleWidth;
-    let minY = sampleHeight;
-    let maxX = -1;
-    let maxY = -1;
-
-    let alphaMinX = sampleWidth;
-    let alphaMinY = sampleHeight;
-    let alphaMaxX = -1;
-    let alphaMaxY = -1;
-
-    for (let y = 0; y < sampleHeight; y++) {
-        const rowStart = y * sampleWidth * 4;
-        for (let x = 0; x < sampleWidth; x++) {
-            const px = rowStart + x * 4;
-            const r = data[px];
-            const g = data[px + 1];
-            const b = data[px + 2];
-            const alpha = data[px + 3];
-            if (alpha <= alphaThreshold) continue;
-
-            if (x < alphaMinX) alphaMinX = x;
-            if (y < alphaMinY) alphaMinY = y;
-            if (x > alphaMaxX) alphaMaxX = x;
-            if (y > alphaMaxY) alphaMaxY = y;
-
-            const isNearWhite = r >= nearWhiteThreshold && g >= nearWhiteThreshold && b >= nearWhiteThreshold;
-            if (isNearWhite) continue;
-
-            if (x < minX) minX = x;
-            if (y < minY) minY = y;
-            if (x > maxX) maxX = x;
-            if (y > maxY) maxY = y;
-        }
-    }
-
-    // If non-white content was not found, fallback to alpha-only bounds.
-    if (maxX < minX || maxY < minY) {
-        minX = alphaMinX;
-        minY = alphaMinY;
-        maxX = alphaMaxX;
-        maxY = alphaMaxY;
-    }
-
-    if (maxX < minX || maxY < minY) {
+    const sampleBounds = detectSampleContentBounds(data, sampleWidth, sampleHeight);
+    if (!sampleBounds) {
         return { x: 0, y: 0, width: fullWidth, height: fullHeight };
     }
+
+    const edgePadding = Math.max(1, Math.round(Math.min(sampleWidth, sampleHeight) * 0.01));
+    const minX = Math.max(0, sampleBounds.minX - edgePadding);
+    const minY = Math.max(0, sampleBounds.minY - edgePadding);
+    const maxX = Math.min(sampleWidth - 1, sampleBounds.maxX + edgePadding);
+    const maxY = Math.min(sampleHeight - 1, sampleBounds.maxY + edgePadding);
 
     const unscaledX = Math.floor(minX / sampleScale);
     const unscaledY = Math.floor(minY / sampleScale);
@@ -441,6 +402,212 @@ function getImageContentBounds(img) {
     const height = Math.max(1, Math.min(fullHeight - y, unscaledH));
 
     return { x, y, width, height };
+}
+
+function detectSampleContentBounds(data, width, height) {
+    const background = estimateBackgroundColor(data, width, height);
+    const backgroundLum = (background.r * 3 + background.g * 4 + background.b) / 8;
+    const alphaThreshold = 12;
+    const darkThreshold = Math.max(105, backgroundLum - 16);
+    const colorDiffThreshold = 46;
+    const pixelCount = width * height;
+    const mask = new Uint8Array(pixelCount);
+
+    for (let y = 0; y < height; y++) {
+        const rowStart = y * width * 4;
+        for (let x = 0; x < width; x++) {
+            const px = rowStart + x * 4;
+            const idx = y * width + x;
+            const alpha = data[px + 3];
+            if (alpha <= alphaThreshold) continue;
+
+            const r = data[px];
+            const g = data[px + 1];
+            const b = data[px + 2];
+            const lum = (r * 3 + g * 4 + b) / 8;
+            const colorDiff =
+                Math.abs(r - background.r) +
+                Math.abs(g - background.g) +
+                Math.abs(b - background.b);
+
+            if (lum <= darkThreshold || colorDiff >= colorDiffThreshold) {
+                mask[idx] = 1;
+            }
+        }
+    }
+
+    if (width > 4 && height > 4) {
+        const filtered = new Uint8Array(mask);
+        for (let y = 1; y < height - 1; y++) {
+            const rowBase = y * width;
+            for (let x = 1; x < width - 1; x++) {
+                const idx = rowBase + x;
+                if (!mask[idx]) continue;
+                let neighbors = 0;
+                if (mask[idx - 1]) neighbors++;
+                if (mask[idx + 1]) neighbors++;
+                if (mask[idx - width]) neighbors++;
+                if (mask[idx + width]) neighbors++;
+                if (neighbors === 0) filtered[idx] = 0;
+            }
+        }
+        mask.set(filtered);
+    }
+
+    const visited = new Uint8Array(pixelCount);
+    const queue = new Int32Array(pixelCount);
+    const minComponentArea = Math.max(30, Math.floor(pixelCount * 0.00015));
+    const borderKeepArea = Math.max(1600, Math.floor(pixelCount * 0.08));
+
+    let unionMinX = width;
+    let unionMinY = height;
+    let unionMaxX = -1;
+    let unionMaxY = -1;
+
+    let largestAny = null;
+    let largestAnyArea = 0;
+    let largestInterior = null;
+    let largestInteriorArea = 0;
+
+    for (let seed = 0; seed < pixelCount; seed++) {
+        if (!mask[seed] || visited[seed]) continue;
+
+        let qStart = 0;
+        let qEnd = 0;
+        queue[qEnd++] = seed;
+        visited[seed] = 1;
+
+        let area = 0;
+        let minX = width;
+        let minY = height;
+        let maxX = -1;
+        let maxY = -1;
+
+        while (qStart < qEnd) {
+            const idx = queue[qStart++];
+            const y = Math.floor(idx / width);
+            const x = idx - y * width;
+
+            area++;
+            if (x < minX) minX = x;
+            if (x > maxX) maxX = x;
+            if (y < minY) minY = y;
+            if (y > maxY) maxY = y;
+
+            if (x > 0) {
+                const n = idx - 1;
+                if (mask[n] && !visited[n]) {
+                    visited[n] = 1;
+                    queue[qEnd++] = n;
+                }
+            }
+            if (x < width - 1) {
+                const n = idx + 1;
+                if (mask[n] && !visited[n]) {
+                    visited[n] = 1;
+                    queue[qEnd++] = n;
+                }
+            }
+            if (y > 0) {
+                const n = idx - width;
+                if (mask[n] && !visited[n]) {
+                    visited[n] = 1;
+                    queue[qEnd++] = n;
+                }
+            }
+            if (y < height - 1) {
+                const n = idx + width;
+                if (mask[n] && !visited[n]) {
+                    visited[n] = 1;
+                    queue[qEnd++] = n;
+                }
+            }
+        }
+
+        const touchesBorder =
+            minX === 0 ||
+            minY === 0 ||
+            maxX === width - 1 ||
+            maxY === height - 1;
+
+        if (area > largestAnyArea) {
+            largestAnyArea = area;
+            largestAny = { minX, minY, maxX, maxY };
+        }
+
+        if (!touchesBorder && area > largestInteriorArea) {
+            largestInteriorArea = area;
+            largestInterior = { minX, minY, maxX, maxY };
+        }
+
+        if (area < minComponentArea) continue;
+        if (touchesBorder && area < borderKeepArea) continue;
+
+        if (minX < unionMinX) unionMinX = minX;
+        if (minY < unionMinY) unionMinY = minY;
+        if (maxX > unionMaxX) unionMaxX = maxX;
+        if (maxY > unionMaxY) unionMaxY = maxY;
+    }
+
+    if (unionMaxX >= unionMinX && unionMaxY >= unionMinY) {
+        return { minX: unionMinX, minY: unionMinY, maxX: unionMaxX, maxY: unionMaxY };
+    }
+    if (largestInterior && largestInteriorArea >= 12) {
+        return largestInterior;
+    }
+    if (largestAny && largestAnyArea >= 12) {
+        return largestAny;
+    }
+    return null;
+}
+
+function estimateBackgroundColor(data, width, height) {
+    const valuesR = [];
+    const valuesG = [];
+    const valuesB = [];
+    const step = Math.max(1, Math.floor(Math.min(width, height) / 180));
+
+    function collect(x, y) {
+        const px = (y * width + x) * 4;
+        const alpha = data[px + 3];
+        if (alpha < 200) return;
+        const r = data[px];
+        const g = data[px + 1];
+        const b = data[px + 2];
+        const lum = (r * 3 + g * 4 + b) / 8;
+        if (lum < 170) return;
+        valuesR.push(r);
+        valuesG.push(g);
+        valuesB.push(b);
+    }
+
+    for (let x = 0; x < width; x += step) {
+        collect(x, 0);
+        collect(x, height - 1);
+    }
+    for (let y = 0; y < height; y += step) {
+        collect(0, y);
+        collect(width - 1, y);
+    }
+
+    if (valuesR.length === 0) {
+        return { r: 250, g: 250, b: 250 };
+    }
+
+    return {
+        r: getMedian(valuesR),
+        g: getMedian(valuesG),
+        b: getMedian(valuesB)
+    };
+}
+
+function getMedian(values) {
+    const sorted = values.slice().sort((a, b) => a - b);
+    const middle = Math.floor(sorted.length / 2);
+    if (sorted.length % 2 === 0) {
+        return Math.round((sorted[middle - 1] + sorted[middle]) / 2);
+    }
+    return sorted[middle];
 }
 
 function getCanvasViewportSize() {
