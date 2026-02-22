@@ -191,6 +191,46 @@ function initToolOptionsInteractions() {
     drawer.addEventListener('touchstart', stopPropagation, { passive: true });
     drawer.addEventListener('touchmove', stopPropagation, { passive: true });
     drawer.addEventListener('wheel', stopPropagation, { passive: true });
+
+    const content = document.getElementById('tool-options-content');
+    if (!content) return;
+
+    let isTouchScrolling = false;
+    let startX = 0;
+    let startY = 0;
+    let startScrollTop = 0;
+    let startScrollLeft = 0;
+
+    content.addEventListener('touchstart', (e) => {
+        if (!isCanvasImageRotated || e.touches.length !== 1) return;
+        const touch = e.touches[0];
+        isTouchScrolling = true;
+        startX = touch.clientX;
+        startY = touch.clientY;
+        startScrollTop = content.scrollTop;
+        startScrollLeft = content.scrollLeft;
+    }, { passive: true });
+
+    content.addEventListener('touchmove', (e) => {
+        if (!isCanvasImageRotated || !isTouchScrolling || e.touches.length !== 1) return;
+        const touch = e.touches[0];
+        const deltaX = touch.clientX - startX;
+        const deltaY = touch.clientY - startY;
+
+        // In rotated mode, map finger movement to panel scrolling explicitly
+        // so both vertical and horizontal drags can navigate options.
+        content.scrollTop = startScrollTop - deltaY;
+        content.scrollLeft = startScrollLeft - deltaX;
+
+        e.preventDefault();
+        e.stopPropagation();
+    }, { passive: false });
+
+    const endTouchScroll = () => {
+        isTouchScrolling = false;
+    };
+    content.addEventListener('touchend', endTouchScroll, { passive: true });
+    content.addEventListener('touchcancel', endTouchScroll, { passive: true });
 }
 
 function selectBrushSize(size, selectedBtn) {
