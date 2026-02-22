@@ -473,13 +473,13 @@ body {
 
 #coloring-screen.image-rotated .tool-options-drawer.rotated-for-image.collapsed {
     opacity: 0;
-    transform: translateX(20px) scale(0.98);
+    transform: rotate(-90deg) scale(0.98);
     pointer-events: none;
 }
 
 #coloring-screen.image-rotated .tool-options-drawer.rotated-for-image.open {
     opacity: 1;
-    transform: translateX(0) scale(1);
+    transform: rotate(-90deg) scale(1);
     pointer-events: auto;
 }
 
