@@ -39,7 +39,7 @@ const colors = [
     '#00BFA5', '#1DE9B6', '#26A69A', '#00ACC1', '#00BCD4', '#26C6DA', '#4DD0E1', '#80DEEA',
     '#2962FF', '#2979FF', '#1E88E5', '#1565C0', '#0D47A1', '#3F51B5', '#5C6BC0', '#90CAF9',
     '#651FFF', '#7C4DFF', '#8E24AA', '#9C27B0', '#AB47BC', '#BA68C8', '#CE93D8', '#E1BEE7',
-    '#FF4081', '#F50057', '#EC407A', '#F06292', '#F48FB1', '#8D6E63', '#A1887F', '#B0BEC5'
+    '#FF4081', '#F50057', '#EC407A', '#F06292', '#F48FB1', '#8D6E63', '#A1887F', '#000000'
 ];
 
 // Glitter colors for sparkle effect

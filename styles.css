@@ -1054,15 +1054,18 @@ body {
 .glitter-palette {
     display: grid;
     grid-template-columns: repeat(5, 1fr);
-    gap: 8px;
-    padding: 10px 0;
+    gap: 4px;
+    padding: 6px 0 2px;
 }
 
 .glitter-btn {
-    width: 40px;
-    height: 40px;
+    width: 100%;
+    max-width: 30px;
+    aspect-ratio: 1 / 1;
+    height: auto;
+    justify-self: center;
     border: 2px solid transparent;
-    border-radius: 8px;
+    border-radius: 6px;
     cursor: pointer;
     transition: all 0.2s ease;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
@@ -1076,7 +1079,7 @@ body {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    font-size: 20px;
+    font-size: 14px;
     animation: sparkle 1.5s infinite;
 }
 
@@ -1086,7 +1089,7 @@ body {
 
 .glitter-btn.active {
     border-color: #333;
-    transform: scale(1.15);
+    transform: scale(1.08);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
 }
 
