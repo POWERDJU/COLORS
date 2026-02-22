@@ -462,24 +462,24 @@ body {
 }
 
 #coloring-screen.image-rotated .tool-options-drawer.rotated-for-image {
-    position: fixed;
-    top: 50%;
-    right: 96px;
+    position: absolute;
+    top: 68px;
+    right: calc(100% + 8px);
     width: min(156vw, 760px);
-    max-height: min(126vh, 980px);
-    transform-origin: center center;
+    max-height: min(62vh, 360px);
+    transform-origin: top right;
     z-index: 140;
 }
 
 #coloring-screen.image-rotated .tool-options-drawer.rotated-for-image.collapsed {
     opacity: 0;
-    transform: translateY(-50%) rotate(90deg) scale(0.96);
+    transform: translateX(20px) scale(0.98);
     pointer-events: none;
 }
 
 #coloring-screen.image-rotated .tool-options-drawer.rotated-for-image.open {
     opacity: 1;
-    transform: translateY(-50%) rotate(90deg) scale(1);
+    transform: translateX(0) scale(1);
     pointer-events: auto;
 }
 
@@ -849,9 +849,10 @@ body {
     }
 
     #coloring-screen.image-rotated .tool-options-drawer.rotated-for-image {
-        right: 82px;
+        top: 62px;
+        right: calc(100% + 8px);
         width: min(172vw, 720px);
-        max-height: min(132vh, 930px);
+        max-height: min(58vh, 340px);
     }
 
     .tool-options-header h3 {
@@ -928,9 +929,10 @@ body {
     }
 
     #coloring-screen.image-rotated .tool-options-drawer.rotated-for-image {
-        right: 70px;
+        top: 58px;
+        right: calc(100% + 6px);
         width: min(188vw, 640px);
-        max-height: min(142vh, 880px);
+        max-height: min(54vh, 320px);
     }
 
     .tool-options-content {
