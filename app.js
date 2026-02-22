@@ -217,10 +217,24 @@ function initToolOptionsInteractions() {
         const deltaX = touch.clientX - startX;
         const deltaY = touch.clientY - startY;
 
-        // In rotated mode, map finger movement to panel scrolling explicitly
-        // so both vertical and horizontal drags can navigate options.
-        content.scrollTop = startScrollTop - deltaY;
-        content.scrollLeft = startScrollLeft - deltaX;
+        const maxScrollX = Math.max(0, content.scrollWidth - content.clientWidth);
+        const maxScrollY = Math.max(0, content.scrollHeight - content.clientHeight);
+
+        // Rotated drawer axis mapping:
+        // - Vertical finger drag should move options vertically on screen.
+        // - Horizontal finger drag should move options horizontally on screen.
+        // If one axis has no overflow, fallback to the other available axis.
+        if (maxScrollX > 0) {
+            content.scrollLeft = startScrollLeft - deltaY;
+        } else if (maxScrollY > 0) {
+            content.scrollTop = startScrollTop - deltaY;
+        }
+
+        if (maxScrollY > 0) {
+            content.scrollTop = startScrollTop + deltaX;
+        } else if (maxScrollX > 0) {
+            content.scrollLeft = startScrollLeft + deltaX;
+        }
 
         e.preventDefault();
         e.stopPropagation();
