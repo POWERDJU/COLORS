@@ -61,6 +61,7 @@ const stampEmojis = [
     '🐬', '🐠', '🐱', '🐶', '🐰', '🐼', '🦄', '🦖', '🚀', '🚗',
     '🚂', '✈️', '🎈', '🎁', '🎀', '🍭'
 ];
+const brushSizeOptions = [5, 10, 20, 30, 50, 100, 200, 300];
 let currentStampEmoji = stampEmojis[0];
 
 const toolOptionConfig = {
@@ -163,21 +164,37 @@ function initColorPalette() {
 }
 
 function initBrushSizeSlider() {
-    const slider = document.getElementById('brush-size');
-    const label = document.getElementById('brush-size-label');
+    const palette = document.getElementById('brush-size-options');
+    if (!palette) return;
 
-    slider.addEventListener('input', (e) => {
-        brushSize = parseInt(e.target.value);
-        label.textContent = brushSize + 'px';
+    palette.innerHTML = '';
+
+    brushSizeOptions.forEach((size) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'size-btn' + (size === brushSize ? ' active' : '');
+        btn.dataset.size = String(size);
+        btn.textContent = size + 'px';
+        btn.onclick = () => selectBrushSize(size, btn);
+        palette.appendChild(btn);
+    });
+}
+
+function selectBrushSize(size, selectedBtn) {
+    brushSize = size;
+
+    document.querySelectorAll('.size-btn').forEach((btn) => {
+        btn.classList.remove('active');
     });
 
-    slider.addEventListener('change', () => {
-        markToolOptionCompleted('size');
-    });
+    if (selectedBtn) {
+        selectedBtn.classList.add('active');
+    } else {
+        const fallbackBtn = document.querySelector(`.size-btn[data-size="${size}"]`);
+        if (fallbackBtn) fallbackBtn.classList.add('active');
+    }
 
-    slider.addEventListener('pointerup', () => {
-        markToolOptionCompleted('size');
-    });
+    markToolOptionCompleted('size');
 }
 
 function initGlitterPalette() {

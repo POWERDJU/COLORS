@@ -605,6 +605,36 @@ body {
 }
 
 /* ===== 리셋 버튼 ===== */
+.size-palette {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 8px;
+}
+
+.size-btn {
+    border: 2px solid #d0d7ef;
+    border-radius: 10px;
+    background: #ffffff;
+    color: #2e3f63;
+    font-family: 'Jua', sans-serif;
+    font-size: 0.95rem;
+    padding: 8px 4px;
+    cursor: pointer;
+    transition: all 0.18s ease;
+}
+
+.size-btn:hover {
+    border-color: #a8b6eb;
+    transform: translateY(-1px);
+}
+
+.size-btn.active {
+    border-color: #667eea;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
 .reset-btn {
     width: 100%;
     padding: 12px;
