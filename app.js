@@ -136,6 +136,7 @@ document.addEventListener('DOMContentLoaded', function () {
     initGlitterPalette();
     initStampPalette();
     initBrushSizeSlider();
+    initToolOptionsInteractions();
     selectTool('brush', false);
     setToolOptionsCollapsed(true);
     registerServiceWorker();
@@ -179,6 +180,17 @@ function initBrushSizeSlider() {
         btn.onclick = () => selectBrushSize(size, btn);
         palette.appendChild(btn);
     });
+}
+
+function initToolOptionsInteractions() {
+    const drawer = document.getElementById('tool-options-drawer');
+    if (!drawer) return;
+
+    // Keep option-panel scrolling gestures isolated from canvas gestures.
+    const stopPropagation = (e) => e.stopPropagation();
+    drawer.addEventListener('touchstart', stopPropagation, { passive: true });
+    drawer.addEventListener('touchmove', stopPropagation, { passive: true });
+    drawer.addEventListener('wheel', stopPropagation, { passive: true });
 }
 
 function selectBrushSize(size, selectedBtn) {
