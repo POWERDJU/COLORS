@@ -422,6 +422,25 @@ body {
     pointer-events: auto;
 }
 
+#coloring-screen.image-rotated .tool-options-drawer {
+    right: calc(100% + 10px);
+    width: min(70vh, 420px);
+    max-height: min(62vw, 420px);
+    transform-origin: top right;
+}
+
+#coloring-screen.image-rotated .tool-options-drawer.collapsed {
+    opacity: 0;
+    transform: rotate(90deg) scale(0.98);
+    pointer-events: none;
+}
+
+#coloring-screen.image-rotated .tool-options-drawer.open {
+    opacity: 1;
+    transform: rotate(90deg) scale(1);
+    pointer-events: auto;
+}
+
 .tool-options-header {
     display: flex;
     align-items: center;

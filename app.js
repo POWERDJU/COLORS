@@ -25,6 +25,7 @@ let blowPointerX = 0;
 let blowPointerY = 0;
 let blowHoldMs = 0;
 let blowLastTimestamp = null;
+let isCanvasImageRotated = false;
 const OUTLINE_THRESHOLD = 185;
 const OUTLINE_ALPHA_THRESHOLD = 24;
 
@@ -290,9 +291,17 @@ function startColoring(imageIndex) {
     document.getElementById('coloring-title').textContent = imageData.name + ' 색칠하기';
 
     showScreen('coloring-screen');
+    isCanvasImageRotated = false;
+    applyCanvasRotationState();
     updateToolOptionSections(false);
     setToolOptionsCollapsed(true);
     initCanvas(imageData);
+}
+
+function applyCanvasRotationState() {
+    const screen = document.getElementById('coloring-screen');
+    if (!screen) return;
+    screen.classList.toggle('image-rotated', isCanvasImageRotated);
 }
 
 function initCanvas(imageData) {
@@ -324,6 +333,8 @@ function initCanvas(imageData) {
         const fitWidth = Math.max(1, canvasWidth - drawPadding * 2);
         const fitHeight = Math.max(1, canvasHeight - drawPadding * 2);
         const shouldRotateForFit = bounds.width > bounds.height && canvasHeight > canvasWidth;
+        isCanvasImageRotated = shouldRotateForFit;
+        applyCanvasRotationState();
         const fitSourceWidth = shouldRotateForFit ? bounds.height : bounds.width;
         const fitSourceHeight = shouldRotateForFit ? bounds.width : bounds.height;
         const scale = Math.min(fitWidth / fitSourceWidth, fitHeight / fitSourceHeight);
@@ -372,6 +383,8 @@ function initCanvas(imageData) {
         ctx.fillStyle = 'white';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
+        isCanvasImageRotated = false;
+        applyCanvasRotationState();
         outlineCtx.clearRect(0, 0, outlineCanvas.width, outlineCanvas.height);
         drawPlaceholderImage(imageData.name);
         cacheOutlinePixels();
@@ -953,7 +966,11 @@ function drawEmojiStamp(centerX, centerY) {
     ctx.font = `${stampSize}px "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText(currentStampEmoji, centerX, centerY);
+    ctx.translate(centerX, centerY);
+    if (isCanvasImageRotated) {
+        ctx.rotate(Math.PI / 2);
+    }
+    ctx.fillText(currentStampEmoji, 0, 0);
     ctx.restore();
 
     // Limit stamp effect to current region and keep neighbor cells intact.
