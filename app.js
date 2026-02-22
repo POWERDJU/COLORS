@@ -194,57 +194,9 @@ function initToolOptionsInteractions() {
 
     const content = document.getElementById('tool-options-content');
     if (!content) return;
-
-    let isTouchScrolling = false;
-    let startX = 0;
-    let startY = 0;
-    let startScrollTop = 0;
-    let startScrollLeft = 0;
-
-    content.addEventListener('touchstart', (e) => {
-        if (!isCanvasImageRotated || e.touches.length !== 1) return;
-        const touch = e.touches[0];
-        isTouchScrolling = true;
-        startX = touch.clientX;
-        startY = touch.clientY;
-        startScrollTop = content.scrollTop;
-        startScrollLeft = content.scrollLeft;
-    }, { passive: true });
-
-    content.addEventListener('touchmove', (e) => {
-        if (!isCanvasImageRotated || !isTouchScrolling || e.touches.length !== 1) return;
-        const touch = e.touches[0];
-        const deltaX = touch.clientX - startX;
-        const deltaY = touch.clientY - startY;
-
-        const maxScrollX = Math.max(0, content.scrollWidth - content.clientWidth);
-        const maxScrollY = Math.max(0, content.scrollHeight - content.clientHeight);
-
-        // Rotated drawer axis mapping:
-        // - Vertical finger drag should move options vertically on screen.
-        // - Horizontal finger drag should move options horizontally on screen.
-        // If one axis has no overflow, fallback to the other available axis.
-        if (maxScrollX > 0) {
-            content.scrollLeft = startScrollLeft - deltaY;
-        } else if (maxScrollY > 0) {
-            content.scrollTop = startScrollTop - deltaY;
-        }
-
-        if (maxScrollY > 0) {
-            content.scrollTop = startScrollTop + deltaX;
-        } else if (maxScrollX > 0) {
-            content.scrollLeft = startScrollLeft + deltaX;
-        }
-
-        e.preventDefault();
-        e.stopPropagation();
-    }, { passive: false });
-
-    const endTouchScroll = () => {
-        isTouchScrolling = false;
-    };
-    content.addEventListener('touchend', endTouchScroll, { passive: true });
-    content.addEventListener('touchcancel', endTouchScroll, { passive: true });
+    content.addEventListener('touchstart', stopPropagation, { passive: true });
+    content.addEventListener('touchmove', stopPropagation, { passive: true });
+    content.addEventListener('wheel', stopPropagation, { passive: true });
 }
 
 function selectBrushSize(size, selectedBtn) {

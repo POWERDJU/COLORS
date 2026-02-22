@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'coloring-app-v20260222h';
+const CACHE_VERSION = 'coloring-app-v20260222i';
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 

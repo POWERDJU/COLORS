@@ -521,7 +521,21 @@ body {
 }
 
 #coloring-screen.image-rotated .tool-options-drawer.rotated-for-image .tool-options-content {
-    touch-action: none;
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
+    gap: 10px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    touch-action: pan-x;
+    scroll-snap-type: x proximity;
+}
+
+#coloring-screen.image-rotated .tool-options-drawer.rotated-for-image .tool-options-content .tool-section {
+    flex: 0 0 min(280px, 74vw);
+    min-width: 220px;
+    margin: 0;
+    scroll-snap-align: start;
 }
 
 .tool-section {
