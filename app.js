@@ -62,8 +62,10 @@ const stampEmojis = [
     '🐬', '🐠', '🐱', '🐶', '🐰', '🐼', '🦄', '🦖', '🚀', '🚗',
     '🚂', '✈️', '🎈', '🎁', '🎀', '🍭'
 ];
+const STAMPS_PER_PAGE = 12;
 const brushSizeOptions = [5, 10, 20, 30, 50, 100, 200, 300];
 let currentStampEmoji = stampEmojis[0];
+let currentStampPage = 0;
 
 const toolOptionConfig = {
     brush: { color: true, size: true, stamp: false, glitter: false },
@@ -255,15 +257,55 @@ function goToGallery() {
 
 function initStampPalette() {
     const palette = document.getElementById('stamp-palette');
-    palette.innerHTML = '';
+    if (!palette) return;
 
-    stampEmojis.forEach((emoji, index) => {
+    const selectedIndex = Math.max(0, stampEmojis.indexOf(currentStampEmoji));
+    currentStampPage = Math.floor(selectedIndex / STAMPS_PER_PAGE);
+    renderStampPalettePage();
+}
+
+function getStampPageCount() {
+    return Math.max(1, Math.ceil(stampEmojis.length / STAMPS_PER_PAGE));
+}
+
+function renderStampPalettePage() {
+    const palette = document.getElementById('stamp-palette');
+    if (!palette) return;
+
+    const totalPages = getStampPageCount();
+    currentStampPage = Math.max(0, Math.min(totalPages - 1, currentStampPage));
+    const startIndex = currentStampPage * STAMPS_PER_PAGE;
+    const pageStamps = stampEmojis.slice(startIndex, startIndex + STAMPS_PER_PAGE);
+
+    palette.innerHTML = '';
+    pageStamps.forEach((emoji) => {
         const btn = document.createElement('button');
-        btn.className = 'stamp-btn' + (index === 0 ? ' active' : '');
+        btn.className = 'stamp-btn' + (emoji === currentStampEmoji ? ' active' : '');
         btn.textContent = emoji;
-        btn.onclick = () => selectStampEmoji(emoji, btn);
+        btn.onclick = () => selectStampEmoji(emoji);
         palette.appendChild(btn);
     });
+
+    const indicator = document.getElementById('stamp-page-indicator');
+    if (indicator) {
+        indicator.textContent = `${currentStampPage + 1}/${totalPages}`;
+    }
+
+    const prevBtn = document.getElementById('stamp-page-prev');
+    if (prevBtn) {
+        prevBtn.disabled = currentStampPage <= 0;
+    }
+
+    const nextBtn = document.getElementById('stamp-page-next');
+    if (nextBtn) {
+        nextBtn.disabled = currentStampPage >= totalPages - 1;
+    }
+}
+
+function changeStampPage(direction) {
+    const totalPages = getStampPageCount();
+    currentStampPage = Math.max(0, Math.min(totalPages - 1, currentStampPage + direction));
+    renderStampPalettePage();
 }
 
 function goToMain() {
@@ -1620,10 +1662,13 @@ function selectGlitterColor(glitter, btn) {
     markToolOptionCompleted('glitter');
 }
 
-function selectStampEmoji(emoji, btn) {
+function selectStampEmoji(emoji) {
     currentStampEmoji = emoji;
-    document.querySelectorAll('.stamp-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
+    const selectedIndex = stampEmojis.indexOf(emoji);
+    if (selectedIndex >= 0) {
+        currentStampPage = Math.floor(selectedIndex / STAMPS_PER_PAGE);
+    }
+    renderStampPalettePage();
     markToolOptionCompleted('stamp');
 }
 
