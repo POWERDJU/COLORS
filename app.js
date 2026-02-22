@@ -288,7 +288,10 @@ function startColoring(imageIndex) {
     currentImageIndex = imageIndex;
     const imageData = levelImages[currentLevel][imageIndex];
 
-    document.getElementById('coloring-title').textContent = imageData.name + ' 색칠하기';
+    const coloringTitle = document.getElementById('coloring-title');
+    if (coloringTitle) {
+        coloringTitle.textContent = imageData.name + ' 색칠하기';
+    }
 
     showScreen('coloring-screen');
     isCanvasImageRotated = false;
@@ -302,6 +305,11 @@ function applyCanvasRotationState() {
     const screen = document.getElementById('coloring-screen');
     if (!screen) return;
     screen.classList.toggle('image-rotated', isCanvasImageRotated);
+
+    const drawer = document.getElementById('tool-options-drawer');
+    if (drawer) {
+        drawer.classList.toggle('rotated-for-image', isCanvasImageRotated);
+    }
 }
 
 function initCanvas(imageData) {
@@ -1570,7 +1578,10 @@ function selectTool(tool, shouldOpenDrawer = true) {
     }
     currentTool = tool;
     document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
-    document.getElementById(tool + '-tool').classList.add('active');
+    const selectedButton = document.getElementById(tool + '-tool');
+    if (selectedButton) {
+        selectedButton.classList.add('active');
+    }
     updateToolOptionSections(shouldOpenDrawer);
 
     if (canvas) {
@@ -1614,8 +1625,12 @@ function saveImage() {
     saveCanvas.height = canvas.height;
     const saveCtx = saveCanvas.getContext('2d');
 
+    // Match on-screen compositing:
+    // base color layer + outline layer blended with multiply.
     saveCtx.drawImage(canvas, 0, 0);
+    saveCtx.globalCompositeOperation = 'multiply';
     saveCtx.drawImage(outlineCanvas, 0, 0);
+    saveCtx.globalCompositeOperation = 'source-over';
 
     const link = document.createElement('a');
     const imageName = levelImages[currentLevel][currentImageIndex].name;

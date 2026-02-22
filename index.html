@@ -17,7 +17,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="styles.css?v=20260222c">
 </head>
 
 <body>
@@ -85,7 +85,9 @@
             <button class="back-btn" onclick="goToGallery()">
                 <span>←</span> 그림 선택
             </button>
-            <h2 id="coloring-title">색칠하기</h2>
+            <button class="reset-top-btn" onclick="resetCanvas()">
+                <span>🔄</span> 다시하기
+            </button>
             <button class="save-btn" onclick="saveImage()">
                 <span>💾</span> 완성! 저장하기
             </button>
@@ -174,11 +176,6 @@
                             </div>
                         </div>
 
-                        <div class="tool-section" id="reset-section">
-                            <button class="reset-btn" onclick="resetCanvas()">
-                                <span>🔄</span> 다시 시작
-                            </button>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -195,7 +192,7 @@
         </div>
     </div>
 
-    <script src="app.js?v=20260221n"></script>
+    <script src="app.js?v=20260222d"></script>
 </body>
 
 </html>
