@@ -17,7 +17,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css?v=20260222o">
+    <link rel="stylesheet" href="styles.css?v=20260222p">
 </head>
 
 <body>
@@ -153,6 +153,11 @@
                             <div class="color-palette" id="color-palette">
                                 <!-- 색상 버튼들이 여기에 추가됨 -->
                             </div>
+                            <div class="color-pagination">
+                                <button class="color-page-btn" id="color-page-prev" onclick="changeColorPage(-1)" aria-label="이전 색상 페이지">&lt;</button>
+                                <span class="color-page-indicator" id="color-page-indicator">1/2</span>
+                                <button class="color-page-btn" id="color-page-next" onclick="changeColorPage(1)" aria-label="다음 색상 페이지">&gt;</button>
+                            </div>
                         </div>
 
                         <div class="tool-section tool-option-section" id="glitter-palette-section" style="display: none;">
@@ -197,7 +202,7 @@
         </div>
     </div>
 
-    <script src="app.js?v=20260222o"></script>
+    <script src="app.js?v=20260222p"></script>
 </body>
 
 </html>

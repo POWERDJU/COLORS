@@ -30,15 +30,16 @@ const OUTLINE_THRESHOLD = 185;
 const OUTLINE_ALPHA_THRESHOLD = 24;
 
 
-// Extended color palette (40 colors)
+// Extended color palette (64 colors): vivid primaries + pastel/watercolor tones
 const colors = [
-    '#FF6B6B', '#FF4757', '#FF6B9D', '#F783AC', '#E64980', '#C2185B',
-    '#FF8E72', '#FFA502', '#FFA94D', '#FFBE76', '#FFD93D', '#F9CA24', '#FFF200',
-    '#C0EB75', '#7BED9F', '#69DB7C', '#2ECC71', '#26DE81', '#20BF6B', '#009432',
-    '#38D9A9', '#3BC9DB', '#00D2D3', '#54A0FF', '#4DABF7', '#3498DB', '#0984E3', '#2E86DE',
-    '#748FFC', '#9775FA', '#A55EEA', '#8854D0', '#DA77F2', '#BE2EDD',
-    '#CD853F', '#D2691E', '#8B4513', '#A0522D', '#795548',
-    '#2C3E50', '#636E72', '#B2BEC3', '#DFE6E9'
+    '#FF0000', '#FF3B30', '#FF6B6B', '#E53935', '#C62828', '#B71C1C', '#FF1744', '#D50000',
+    '#FF6F00', '#FF8F00', '#FFA000', '#FFB300', '#FFC107', '#FFD54F', '#FF9800', '#FF7043',
+    '#FFFF00', '#FFEB3B', '#FDD835', '#FBC02D', '#F9A825', '#F57F17', '#FFF176', '#FFF59D',
+    '#00C853', '#00E676', '#2ECC71', '#4CAF50', '#43A047', '#388E3C', '#66BB6A', '#A5D6A7',
+    '#00BFA5', '#1DE9B6', '#26A69A', '#00ACC1', '#00BCD4', '#26C6DA', '#4DD0E1', '#80DEEA',
+    '#2962FF', '#2979FF', '#1E88E5', '#1565C0', '#0D47A1', '#3F51B5', '#5C6BC0', '#90CAF9',
+    '#651FFF', '#7C4DFF', '#8E24AA', '#9C27B0', '#AB47BC', '#BA68C8', '#CE93D8', '#E1BEE7',
+    '#FF4081', '#F50057', '#EC407A', '#F06292', '#F48FB1', '#8D6E63', '#A1887F', '#B0BEC5'
 ];
 
 // Glitter colors for sparkle effect
@@ -62,10 +63,12 @@ const stampEmojis = [
     '🐬', '🐠', '🐱', '🐶', '🐰', '🐼', '🦄', '🦖', '🚀', '🚗',
     '🚂', '✈️', '🎈', '🎁', '🎀', '🍭'
 ];
+const COLORS_PER_PAGE = 32;
 const STAMPS_PER_PAGE = 12;
 const brushSizeOptions = [5, 10, 20, 30, 50, 100, 200, 300];
 let currentStampEmoji = stampEmojis[0];
 let currentStampPage = 0;
+let currentColorPage = 0;
 
 const toolOptionConfig = {
     brush: { color: true, size: true, stamp: false, glitter: false },
@@ -155,16 +158,58 @@ function registerServiceWorker() {
 }
 
 function initColorPalette() {
-    const palette = document.getElementById('color-palette');
-    palette.innerHTML = '';
+    const selectedIndex = colors.indexOf(currentColor);
+    if (selectedIndex < 0) {
+        currentColor = colors[0];
+        currentColorPage = 0;
+    } else {
+        currentColorPage = Math.floor(selectedIndex / COLORS_PER_PAGE);
+    }
+    renderColorPalettePage();
+}
 
-    colors.forEach((color, index) => {
+function getColorPageCount() {
+    return Math.max(1, Math.ceil(colors.length / COLORS_PER_PAGE));
+}
+
+function renderColorPalettePage() {
+    const palette = document.getElementById('color-palette');
+    if (!palette) return;
+
+    const totalPages = getColorPageCount();
+    currentColorPage = Math.max(0, Math.min(totalPages - 1, currentColorPage));
+    const startIndex = currentColorPage * COLORS_PER_PAGE;
+    const pageColors = colors.slice(startIndex, startIndex + COLORS_PER_PAGE);
+
+    palette.innerHTML = '';
+    pageColors.forEach((color) => {
         const btn = document.createElement('button');
-        btn.className = 'color-btn' + (index === 0 ? ' active' : '');
+        btn.className = 'color-btn' + (color === currentColor ? ' active' : '');
         btn.style.backgroundColor = color;
-        btn.onclick = () => selectColor(color, btn);
+        btn.onclick = () => selectColor(color);
         palette.appendChild(btn);
     });
+
+    const indicator = document.getElementById('color-page-indicator');
+    if (indicator) {
+        indicator.textContent = `${currentColorPage + 1}/${totalPages}`;
+    }
+
+    const prevBtn = document.getElementById('color-page-prev');
+    if (prevBtn) {
+        prevBtn.disabled = currentColorPage <= 0;
+    }
+
+    const nextBtn = document.getElementById('color-page-next');
+    if (nextBtn) {
+        nextBtn.disabled = currentColorPage >= totalPages - 1;
+    }
+}
+
+function changeColorPage(direction) {
+    const totalPages = getColorPageCount();
+    currentColorPage = Math.max(0, Math.min(totalPages - 1, currentColorPage + direction));
+    renderColorPalettePage();
 }
 
 function initBrushSizeSlider() {
@@ -1528,10 +1573,13 @@ function detectRegion(startX, startY) {
 }
 
 // ===== Color Selection =====
-function selectColor(color, btn) {
+function selectColor(color) {
     currentColor = color;
-    document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
+    const selectedIndex = colors.indexOf(color);
+    if (selectedIndex >= 0) {
+        currentColorPage = Math.floor(selectedIndex / COLORS_PER_PAGE);
+    }
+    renderColorPalettePage();
     markToolOptionCompleted('color');
 
     if (currentTool === 'eraser') {

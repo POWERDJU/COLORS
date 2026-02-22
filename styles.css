@@ -463,11 +463,11 @@ body {
 
 #coloring-screen.image-rotated .tool-options-drawer.rotated-for-image {
     position: absolute;
-    top: 68px;
+    top: 64px;
     right: calc(100% + 8px);
-    --rot-drawer-width: min(156vw, 760px);
+    --rot-drawer-width: clamp(360px, calc(100dvh - 92px), 560px);
     width: var(--rot-drawer-width);
-    max-height: min(62vh, 360px);
+    max-height: min(52vh, 300px);
     transform-origin: top right;
     z-index: 140;
 }
@@ -510,9 +510,9 @@ body {
 }
 
 .tool-options-content {
-    padding: 12px;
+    padding: 10px;
     display: grid;
-    gap: 10px;
+    gap: 8px;
     flex: 1 1 auto;
     min-height: 0;
     overflow-y: auto;
@@ -525,7 +525,7 @@ body {
     display: flex;
     flex-direction: row;
     align-items: stretch;
-    gap: 10px;
+    gap: 4px;
     overflow-x: auto;
     overflow-y: hidden;
     touch-action: pan-x;
@@ -533,27 +533,32 @@ body {
 }
 
 #coloring-screen.image-rotated .tool-options-drawer.rotated-for-image .tool-options-content .tool-section {
-    flex: 0 0 min(240px, 62vw);
-    min-width: 200px;
+    flex: 0 0 min(194px, 50vw);
+    min-width: 160px;
     margin: 0;
     scroll-snap-align: start;
 }
 
 #coloring-screen.image-rotated .tool-options-drawer.rotated-for-image .tool-options-content #stamp-palette-section {
-    flex: 0 0 min(320px, 84vw);
-    min-width: 280px;
+    flex: 0 0 min(236px, 62vw);
+    min-width: 208px;
+}
+
+#coloring-screen.image-rotated .tool-options-drawer.rotated-for-image .tool-options-content #color-section {
+    flex: 0 0 min(236px, 62vw);
+    min-width: 208px;
 }
 
 .tool-section {
     background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-    border-radius: 15px;
-    padding: 15px;
+    border-radius: 11px;
+    padding: 9px;
 }
 
 .tool-section h3 {
-    font-size: 1.2rem;
+    font-size: 0.92rem;
     color: #333;
-    margin-bottom: 12px;
+    margin-bottom: 6px;
     text-align: center;
 }
 
@@ -561,13 +566,13 @@ body {
 .color-palette {
     display: grid;
     grid-template-columns: repeat(8, 1fr);
-    gap: 6px;
+    gap: 3px;
 }
 
 .color-btn {
-    width: 28px;
-    height: 28px;
-    border: 2px solid transparent;
+    width: 20px;
+    height: 20px;
+    border: 1.5px solid transparent;
     border-radius: 50%;
     cursor: pointer;
     transition: all 0.2s ease;
@@ -580,8 +585,46 @@ body {
 
 .color-btn.active {
     border-color: #333;
-    transform: scale(1.2);
+    transform: scale(1.16);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.color-pagination {
+    margin-top: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+.color-page-btn {
+    width: 26px;
+    height: 26px;
+    border: 2px solid #c8d1f0;
+    border-radius: 8px;
+    background: #fff;
+    color: #324260;
+    font-size: 0.82rem;
+    font-family: 'Jua', sans-serif;
+    cursor: pointer;
+    transition: all 0.16s ease;
+}
+
+.color-page-btn:hover:not(:disabled) {
+    border-color: #8fa3e8;
+    transform: translateY(-1px);
+}
+
+.color-page-btn:disabled {
+    opacity: 0.45;
+    cursor: default;
+}
+
+.color-page-indicator {
+    min-width: 34px;
+    text-align: center;
+    color: #324260;
+    font-size: 0.82rem;
 }
 
 /* ===== 도구 버튼 ===== */
@@ -634,17 +677,17 @@ body {
 .stamp-palette {
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 8px;
+    gap: 4px;
 }
 
 .stamp-btn {
     width: 100%;
-    min-height: 46px;
-    border: 2px solid #ddd;
-    border-radius: 12px;
+    min-height: 34px;
+    border: 1.5px solid #ddd;
+    border-radius: 8px;
     background: #fff;
     cursor: pointer;
-    font-size: 1.35rem;
+    font-size: 1rem;
     line-height: 1;
     display: flex;
     align-items: center;
@@ -665,21 +708,21 @@ body {
 }
 
 .stamp-pagination {
-    margin-top: 10px;
+    margin-top: 6px;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 10px;
+    gap: 6px;
 }
 
 .stamp-page-btn {
-    width: 34px;
-    height: 34px;
+    width: 26px;
+    height: 26px;
     border: 2px solid #c8d1f0;
-    border-radius: 10px;
+    border-radius: 8px;
     background: #fff;
     color: #324260;
-    font-size: 1.05rem;
+    font-size: 0.82rem;
     font-family: 'Jua', sans-serif;
     cursor: pointer;
     transition: all 0.16s ease;
@@ -696,10 +739,10 @@ body {
 }
 
 .stamp-page-indicator {
-    min-width: 42px;
+    min-width: 34px;
     text-align: center;
     color: #324260;
-    font-size: 0.98rem;
+    font-size: 0.82rem;
 }
 
 /* ===== 브러시 크기 ===== */
@@ -737,17 +780,17 @@ body {
 .size-palette {
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 8px;
+    gap: 4px;
 }
 
 .size-btn {
-    border: 2px solid #d0d7ef;
-    border-radius: 10px;
+    border: 1.5px solid #d0d7ef;
+    border-radius: 8px;
     background: #ffffff;
     color: #2e3f63;
     font-family: 'Jua', sans-serif;
-    font-size: 0.95rem;
-    padding: 8px 4px;
+    font-size: 0.78rem;
+    padding: 5px 2px;
     cursor: pointer;
     transition: all 0.18s ease;
 }
@@ -895,9 +938,9 @@ body {
     #coloring-screen.image-rotated .tool-options-drawer.rotated-for-image {
         top: 62px;
         right: calc(100% + 8px);
-        --rot-drawer-width: min(172vw, 720px);
+        --rot-drawer-width: clamp(340px, calc(100dvh - 88px), 520px);
         width: var(--rot-drawer-width);
-        max-height: min(58vh, 340px);
+        max-height: min(50vh, 270px);
     }
 
     .tool-options-header h3 {
@@ -954,8 +997,8 @@ body {
     }
 
     .tools-panel {
-        width: 64px;
-        flex-basis: 64px;
+        width: 60px;
+        flex-basis: 60px;
         padding: 5px;
     }
 
@@ -969,20 +1012,36 @@ body {
     }
 
     .tool-options-drawer {
-        width: min(280px, calc(100vw - 82px));
+        width: min(252px, calc(100vw - 76px));
         max-height: 66vh;
     }
 
     #coloring-screen.image-rotated .tool-options-drawer.rotated-for-image {
         top: 58px;
         right: calc(100% + 6px);
-        --rot-drawer-width: min(188vw, 640px);
+        --rot-drawer-width: clamp(320px, calc(100dvh - 84px), 480px);
         width: var(--rot-drawer-width);
-        max-height: min(54vh, 320px);
+        max-height: min(48vh, 240px);
     }
 
     .tool-options-content {
-        padding: 10px;
+        padding: 8px;
+        gap: 6px;
+    }
+
+    .color-btn {
+        width: 18px;
+        height: 18px;
+    }
+
+    .stamp-btn {
+        min-height: 30px;
+        font-size: 0.95rem;
+    }
+
+    .size-btn {
+        font-size: 0.72rem;
+        padding: 4px 2px;
     }
 
     .save-btn {
