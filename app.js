@@ -1,4 +1,4 @@
-// ===== Global Variables =====
+﻿// ===== Global Variables =====
 let currentLevel = 1;
 let currentImageIndex = 0;
 let currentTool = 'brush';
@@ -26,6 +26,9 @@ let blowPointerY = 0;
 let blowHoldMs = 0;
 let blowLastTimestamp = null;
 let isCanvasImageRotated = false;
+let currentColoringSource = 'gallery'; // 'gallery' | 'custom'
+let currentColoringName = '';
+let customImageObjectUrl = null;
 const OUTLINE_THRESHOLD = 185;
 const OUTLINE_ALPHA_THRESHOLD = 24;
 
@@ -58,10 +61,9 @@ const glitterColors = [
 
 let currentGlitterColor = glitterColors[0]; // Default to gold
 const stampEmojis = [
-    '⭐', '🌟', '✨', '💖', '❤️', '🧡', '💛', '💚', '💙', '💜',
-    '🌈', '☁️', '🌸', '🌼', '🌻', '🍀', '🦋', '🐞', '🐝', '🐢',
-    '🐬', '🐠', '🐱', '🐶', '🐰', '🐼', '🦄', '🦖', '🚀', '🚗',
-    '🚂', '✈️', '🎈', '🎁', '🎀', '🍭'
+    '🐝', '🌸', '💛', '⭐', '🐢', '🌼', '💚', '🌟', '🐬', '🌻', '💙', '✨',
+    '🐠', '🍀', '💜', '💖', '🐱', '🦋', '🌈', '❤️', '🐶', '🍓', '🧡', '💫',
+    '🚗', '🚒', '🚓', '🚑', '🚜', '🚀', '☀️', '☁️', '🌙', '🎈', '🎁', '🎉'
 ];
 const COLORS_PER_PAGE = 32;
 const STAMPS_PER_PAGE = 12;
@@ -142,6 +144,19 @@ document.addEventListener('DOMContentLoaded', function () {
     initStampPalette();
     initBrushSizeSlider();
     initToolOptionsInteractions();
+    const customImageInput = document.getElementById('custom-image-input');
+    if (customImageInput) {
+        customImageInput.addEventListener('change', handleCustomImageUpload);
+        customImageInput.addEventListener('input', handleCustomImageUpload);
+    }
+    document.addEventListener('change', function (event) {
+        const target = event.target;
+        if (target && target.id === 'custom-image-input') {
+            handleCustomImageUpload(event);
+        }
+    }, true);
+    window.openCustomImagePicker = openCustomImagePicker;
+    window.handleCustomImageUpload = handleCustomImageUpload;
     selectTool('brush', false);
     setToolOptionsCollapsed(true);
     registerServiceWorker();
@@ -149,6 +164,13 @@ document.addEventListener('DOMContentLoaded', function () {
 
 function registerServiceWorker() {
     if (!('serviceWorker' in navigator)) return;
+    const isLocalHost = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+    if (isLocalHost) {
+        navigator.serviceWorker.getRegistrations().then((regs) => {
+            regs.forEach((reg) => reg.unregister());
+        }).catch(() => { });
+        return;
+    }
 
     window.addEventListener('load', () => {
         navigator.serviceWorker.register('./sw.js').catch((err) => {
@@ -292,11 +314,106 @@ function selectLevel(level) {
     showScreen('gallery-screen');
 }
 
+function updateColoringBackButton() {
+    const backBtn = document.querySelector('#coloring-screen .coloring-header .back-btn');
+    if (!backBtn) return;
+
+    if (currentColoringSource === 'custom') {
+        backBtn.innerHTML = '<span>&larr;</span> 처음 화면';
+    } else {
+        backBtn.innerHTML = '<span>&larr;</span> 그림 선택';
+    }
+}
+
+function openCustomImagePicker() {
+    const input = document.getElementById('custom-image-input');
+    if (!input) return;
+    input.value = '';
+    input.click();
+}
+
+function processCustomImageFile(file) {
+    if (!file) return;
+    try {
+        startCustomColoring(file);
+    } catch (error) {
+        console.error('Custom image start failed:', error);
+        alert('이미지를 여는 중 오류가 발생했습니다.');
+    }
+}
+
+function handleCustomImageUpload(event) {
+    const input = event && event.target ? event.target : document.getElementById('custom-image-input');
+    if (!input) return;
+    const file = input.files && input.files[0];
+    if (!file) return;
+
+    processCustomImageFile(file);
+    input.value = '';
+}
+
+function startCustomColoring(file) {
+    const finalizeStart = (imageSrc) => {
+        if (!imageSrc) {
+            alert('이미지를 불러오지 못했습니다.');
+            return;
+        }
+
+        if (customImageObjectUrl && customImageObjectUrl.startsWith('blob:')) {
+            URL.revokeObjectURL(customImageObjectUrl);
+        }
+        customImageObjectUrl = imageSrc.startsWith('blob:') ? imageSrc : null;
+
+        currentColoringSource = 'custom';
+        currentImageIndex = -1;
+        currentColoringName = (file.name || 'my_image').replace(/\.[^/.]+$/, '') || 'my_image';
+        updateColoringBackButton();
+
+        showScreen('coloring-screen');
+        isCanvasImageRotated = false;
+        applyCanvasRotationState();
+        updateToolOptionSections(false);
+        setToolOptionsCollapsed(true);
+        initCanvas({
+            name: currentColoringName,
+            src: imageSrc
+        });
+    };
+
+    if (window.URL && typeof URL.createObjectURL === 'function') {
+        try {
+            const blobUrl = URL.createObjectURL(file);
+            finalizeStart(blobUrl);
+            return;
+        } catch (error) {
+            console.warn('createObjectURL failed, falling back to FileReader', error);
+        }
+    }
+
+    const reader = new FileReader();
+    reader.onload = function (loadEvent) {
+        const result = loadEvent && loadEvent.target ? loadEvent.target.result : null;
+        if (typeof result === 'string' && result.length > 0) {
+            finalizeStart(result);
+            return;
+        }
+        alert('이미지를 불러오지 못했습니다.');
+    };
+    reader.onerror = function () {
+        alert('이미지를 불러오는 중 오류가 발생했습니다.');
+    };
+    reader.readAsDataURL(file);
+}
+
 function goBack(target) {
     showScreen(target);
 }
 
 function goToGallery() {
+    if (currentColoringSource === 'custom') {
+        showScreen('main-screen');
+        return;
+    }
     showScreen('gallery-screen');
 }
 
@@ -363,7 +480,7 @@ function displayGallery() {
     const grid = document.getElementById('gallery-grid');
     const title = document.getElementById('gallery-title');
 
-    title.textContent = currentLevel + '단계 - 그림 선택';
+    title.textContent = currentLevel + '?④퀎 - 洹몃┝ ?좏깮';
     grid.innerHTML = '';
 
     levelImages[currentLevel].forEach((image, index) => {
@@ -392,10 +509,13 @@ function createThumbnailSVG(name) {
 function startColoring(imageIndex) {
     currentImageIndex = imageIndex;
     const imageData = levelImages[currentLevel][imageIndex];
+    currentColoringSource = 'gallery';
+    currentColoringName = imageData.name;
+    updateColoringBackButton();
 
     const coloringTitle = document.getElementById('coloring-title');
     if (coloringTitle) {
-        coloringTitle.textContent = imageData.name + ' 색칠하기';
+        coloringTitle.textContent = imageData.name + ' ?됱튌?섍린';
     }
 
     showScreen('coloring-screen');
@@ -424,7 +544,7 @@ function initCanvas(imageData) {
     outlineCanvas = document.getElementById('outline-canvas');
     outlineCtx = outlineCanvas.getContext('2d');
 
-    const imagePath = 'images/level' + currentLevel + '/' + imageData.file;
+    const imagePath = imageData.src ? imageData.src : ('images/level' + currentLevel + '/' + imageData.file);
     const viewport = getCanvasViewportSize();
 
     const img = new Image();
@@ -1608,7 +1728,7 @@ function setToolOptionsCollapsed(collapsed) {
     isToolOptionsCollapsed = collapsed;
     drawer.classList.toggle('collapsed', collapsed);
     drawer.classList.toggle('open', !collapsed);
-    toggleBtn.textContent = collapsed ? '열기' : '닫기';
+    toggleBtn.textContent = collapsed ? '?닿린' : '?リ린';
     toggleBtn.setAttribute('aria-expanded', (!collapsed).toString());
     updateToolOptionsTitle();
 }
@@ -1672,12 +1792,12 @@ function updateToolOptionsTitle() {
     const title = document.getElementById('tool-options-title');
     if (!title) return;
 
-    const toolName = toolDisplayNames[currentTool] || '도구';
+    const toolName = toolDisplayNames[currentTool] || '?꾧뎄';
     if (pendingOptionSelections.size > 0 && !isToolOptionsCollapsed) {
-        title.textContent = `${toolName} 옵션 (${pendingOptionSelections.size})`;
+        title.textContent = `${toolName} ?듭뀡 (${pendingOptionSelections.size})`;
         return;
     }
-    title.textContent = `${toolName} 옵션`;
+    title.textContent = `${toolName} ?듭뀡`;
 }
 
 function selectTool(tool, shouldOpenDrawer = true) {
@@ -1723,7 +1843,7 @@ function selectStampEmoji(emoji) {
 
 // ===== Canvas Reset =====
 function resetCanvas() {
-    if (originalImage && confirm('처음부터 다시 색칠할까요?')) {
+    if (originalImage && confirm('泥섏쓬遺???ㅼ떆 ?됱튌?좉퉴??')) {
         ctx.putImageData(originalImage, 0, 0);
         strokeBaseImageData = null;
     }
@@ -1744,8 +1864,12 @@ function saveImage() {
     saveCtx.globalCompositeOperation = 'source-over';
 
     const link = document.createElement('a');
-    const imageName = levelImages[currentLevel][currentImageIndex].name;
-    link.download = imageName + '_색칠완성.jpg';
+    const fallbackName = (currentImageIndex >= 0 && levelImages[currentLevel] && levelImages[currentLevel][currentImageIndex])
+        ? levelImages[currentLevel][currentImageIndex].name
+        : 'my_image';
+    const imageName = currentColoringName || fallbackName;
+    const safeImageName = (imageName || 'my_image').replace(/[\\/:*?"<>|]+/g, '_').trim() || 'my_image';
+    link.download = safeImageName + '_coloring.jpg';
     link.href = saveCanvas.toDataURL('image/jpeg', 0.95);
     link.click();
 
@@ -1759,3 +1883,5 @@ function showSaveModal() {
 function closeSaveModal() {
     document.getElementById('save-modal').classList.remove('active');
 }
+
+
