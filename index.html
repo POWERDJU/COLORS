@@ -17,7 +17,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css?v=20260222q">
+    <link rel="stylesheet" href="styles.css?v=20260222zd">
 </head>
 
 <body>
@@ -62,6 +62,12 @@
                 </div>
             </div>
 
+        </div>
+        <div class="custom-upload-wrap">
+            <label class="custom-upload-btn" id="custom-upload-btn" for="custom-image-input">
+                <span>🖼️</span> 다른 그림 색칠
+            </label>
+            <input id="custom-image-input" class="custom-upload-input" type="file" accept="image/*" onchange="handleCustomImageUpload(event)" oninput="handleCustomImageUpload(event)">
         </div>
     </div>
 
@@ -202,7 +208,7 @@
         </div>
     </div>
 
-    <script src="app.js?v=20260222q"></script>
+    <script src="app.js?v=20260222zd"></script>
 </body>
 
 </html>

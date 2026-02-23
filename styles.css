@@ -201,6 +201,48 @@ body {
     font-size: 1.1rem;
 }
 
+.custom-upload-wrap {
+    display: flex;
+    justify-content: center;
+    padding: 6px 20px 34px;
+}
+
+.custom-upload-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    min-width: 230px;
+    padding: 14px 24px;
+    border: none;
+    border-radius: 999px;
+    font-family: 'Jua', sans-serif;
+    font-size: 1.2rem;
+    color: #fff;
+    background: linear-gradient(135deg, #ff8a65 0%, #ff7043 55%, #ff5722 100%);
+    box-shadow: 0 8px 22px rgba(255, 112, 67, 0.35);
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.custom-upload-btn:hover {
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 12px 28px rgba(255, 112, 67, 0.4);
+}
+
+.custom-upload-input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    border: 0;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    clip-path: inset(50%);
+    white-space: nowrap;
+}
+
 /* ===== 갤러리 화면 ===== */
 .gallery-header {
     display: flex;
@@ -960,6 +1002,18 @@ body {
     .level-container {
         padding: 15px;
         gap: 15px;
+    }
+
+    .custom-upload-wrap {
+        padding: 2px 12px 18px;
+    }
+
+    .custom-upload-btn {
+        min-width: 0;
+        width: 100%;
+        max-width: 360px;
+        font-size: 1.02rem;
+        padding: 11px 16px;
     }
 
     .gallery-header {
