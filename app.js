@@ -480,7 +480,7 @@ function displayGallery() {
     const grid = document.getElementById('gallery-grid');
     const title = document.getElementById('gallery-title');
 
-    title.textContent = currentLevel + '?④퀎 - 洹몃┝ ?좏깮';
+    title.textContent = currentLevel + '단계 - 그림 선택';
     grid.innerHTML = '';
 
     levelImages[currentLevel].forEach((image, index) => {
@@ -515,7 +515,7 @@ function startColoring(imageIndex) {
 
     const coloringTitle = document.getElementById('coloring-title');
     if (coloringTitle) {
-        coloringTitle.textContent = imageData.name + ' ?됱튌?섍린';
+        coloringTitle.textContent = imageData.name + ' 색칠하기';
     }
 
     showScreen('coloring-screen');
@@ -1728,7 +1728,7 @@ function setToolOptionsCollapsed(collapsed) {
     isToolOptionsCollapsed = collapsed;
     drawer.classList.toggle('collapsed', collapsed);
     drawer.classList.toggle('open', !collapsed);
-    toggleBtn.textContent = collapsed ? '?닿린' : '?リ린';
+    toggleBtn.textContent = collapsed ? '열기' : '닫기';
     toggleBtn.setAttribute('aria-expanded', (!collapsed).toString());
     updateToolOptionsTitle();
 }
@@ -1792,12 +1792,12 @@ function updateToolOptionsTitle() {
     const title = document.getElementById('tool-options-title');
     if (!title) return;
 
-    const toolName = toolDisplayNames[currentTool] || '?꾧뎄';
+    const toolName = toolDisplayNames[currentTool] || '도구';
     if (pendingOptionSelections.size > 0 && !isToolOptionsCollapsed) {
-        title.textContent = `${toolName} ?듭뀡 (${pendingOptionSelections.size})`;
+        title.textContent = `${toolName} 옵션 (${pendingOptionSelections.size})`;
         return;
     }
-    title.textContent = `${toolName} ?듭뀡`;
+    title.textContent = `${toolName} 옵션`;
 }
 
 function selectTool(tool, shouldOpenDrawer = true) {
@@ -1843,7 +1843,7 @@ function selectStampEmoji(emoji) {
 
 // ===== Canvas Reset =====
 function resetCanvas() {
-    if (originalImage && confirm('泥섏쓬遺???ㅼ떆 ?됱튌?좉퉴??')) {
+    if (originalImage && confirm('처음부터 다시 색칠할까요?')) {
         ctx.putImageData(originalImage, 0, 0);
         strokeBaseImageData = null;
     }
