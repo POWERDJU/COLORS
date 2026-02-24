@@ -24,6 +24,12 @@ body {
     overflow-x: hidden;
 }
 
+html,
+body {
+    overscroll-behavior-x: none;
+    overscroll-behavior-y: none;
+}
+
 /* ===== 화면 전환 ===== */
 .screen {
     display: none;

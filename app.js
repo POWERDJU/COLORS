@@ -144,6 +144,7 @@ document.addEventListener('DOMContentLoaded', function () {
     initStampPalette();
     initBrushSizeSlider();
     initToolOptionsInteractions();
+    initPullToRefreshPrevention();
     const customImageInput = document.getElementById('custom-image-input');
     if (customImageInput) {
         customImageInput.addEventListener('change', handleCustomImageUpload);
@@ -177,6 +178,48 @@ function registerServiceWorker() {
             console.warn('Service worker registration failed:', err);
         });
     });
+}
+
+function initPullToRefreshPrevention() {
+    const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+    if (!isTouchDevice) return;
+
+    let startY = 0;
+    let startedAtTop = false;
+
+    const hasScrollableParentWithOffset = (target) => {
+        if (!(target instanceof Element)) return false;
+
+        const scrollableParent = target.closest('.tool-options-content, .gallery-grid, .level-container');
+        if (!scrollableParent) return false;
+        if (scrollableParent.scrollHeight <= scrollableParent.clientHeight) return false;
+        return scrollableParent.scrollTop > 0;
+    };
+
+    document.addEventListener('touchstart', (event) => {
+        if (event.touches.length !== 1) return;
+        startY = event.touches[0].clientY;
+        startedAtTop = window.scrollY <= 0;
+    }, { passive: true });
+
+    document.addEventListener('touchmove', (event) => {
+        if (!startedAtTop) return;
+        if (event.touches.length !== 1) return;
+
+        const currentY = event.touches[0].clientY;
+        if (currentY <= startY) return;
+        if (hasScrollableParentWithOffset(event.target)) return;
+
+        event.preventDefault();
+    }, { passive: false });
+
+    document.addEventListener('touchend', () => {
+        startedAtTop = false;
+    }, { passive: true });
+
+    document.addEventListener('touchcancel', () => {
+        startedAtTop = false;
+    }, { passive: true });
 }
 
 function initColorPalette() {
