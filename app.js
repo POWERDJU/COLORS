@@ -26,6 +26,18 @@ let blowPointerY = 0;
 let blowHoldMs = 0;
 let blowLastTimestamp = null;
 let isCanvasImageRotated = false;
+let canvasZoomScale = 1;
+let canvasZoomOffsetX = 0;
+let canvasZoomOffsetY = 0;
+let isPinchZooming = false;
+let pinchStartDistance = 0;
+let pinchStartScale = 1;
+let pinchStartCenterX = 0;
+let pinchStartCenterY = 0;
+let pinchStartOffsetX = 0;
+let pinchStartOffsetY = 0;
+const MIN_CANVAS_ZOOM = 1;
+const MAX_CANVAS_ZOOM = 4;
 let currentColoringSource = 'gallery'; // 'gallery' | 'custom'
 let currentColoringName = '';
 let customImageObjectUrl = null;
@@ -415,6 +427,7 @@ function startCustomColoring(file) {
         showScreen('coloring-screen');
         isCanvasImageRotated = false;
         applyCanvasRotationState();
+        resetCanvasZoom();
         updateToolOptionSections(false);
         setToolOptionsCollapsed(true);
         initCanvas({
@@ -564,6 +577,7 @@ function startColoring(imageIndex) {
     showScreen('coloring-screen');
     isCanvasImageRotated = false;
     applyCanvasRotationState();
+    resetCanvasZoom();
     updateToolOptionSections(false);
     setToolOptionsCollapsed(true);
     initCanvas(imageData);
@@ -599,6 +613,7 @@ function initCanvas(imageData) {
         canvas.height = canvasHeight;
         outlineCanvas.width = canvasWidth;
         outlineCanvas.height = canvasHeight;
+        applyCanvasZoomTransform();
 
         ctx.fillStyle = 'white';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -655,6 +670,7 @@ function initCanvas(imageData) {
         canvas.height = canvasHeight;
         outlineCanvas.width = canvasWidth;
         outlineCanvas.height = canvasHeight;
+        applyCanvasZoomTransform();
 
         ctx.fillStyle = 'white';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -940,6 +956,55 @@ function getCanvasViewportSize() {
     return { width: fallbackWidth, height: fallbackHeight };
 }
 
+function clampCanvasZoomState() {
+    const wrapper = document.querySelector('.canvas-wrapper');
+    if (!wrapper) return;
+
+    canvasZoomScale = Math.max(MIN_CANVAS_ZOOM, Math.min(MAX_CANVAS_ZOOM, canvasZoomScale));
+    if (canvasZoomScale <= MIN_CANVAS_ZOOM + 0.001) {
+        canvasZoomScale = 1;
+        canvasZoomOffsetX = 0;
+        canvasZoomOffsetY = 0;
+        return;
+    }
+
+    const maxOffsetX = (wrapper.clientWidth * (canvasZoomScale - 1)) / 2;
+    const maxOffsetY = (wrapper.clientHeight * (canvasZoomScale - 1)) / 2;
+    canvasZoomOffsetX = Math.max(-maxOffsetX, Math.min(maxOffsetX, canvasZoomOffsetX));
+    canvasZoomOffsetY = Math.max(-maxOffsetY, Math.min(maxOffsetY, canvasZoomOffsetY));
+}
+
+function applyCanvasZoomTransform() {
+    if (!canvas || !outlineCanvas) return;
+    clampCanvasZoomState();
+
+    const transformValue = `translate(-50%, -50%) translate(${canvasZoomOffsetX}px, ${canvasZoomOffsetY}px) scale(${canvasZoomScale})`;
+    canvas.style.transform = transformValue;
+    outlineCanvas.style.transform = transformValue;
+}
+
+function resetCanvasZoom() {
+    canvasZoomScale = 1;
+    canvasZoomOffsetX = 0;
+    canvasZoomOffsetY = 0;
+    isPinchZooming = false;
+    pinchStartDistance = 0;
+    applyCanvasZoomTransform();
+}
+
+function getTouchDistance(touchA, touchB) {
+    const dx = touchA.clientX - touchB.clientX;
+    const dy = touchA.clientY - touchB.clientY;
+    return Math.hypot(dx, dy);
+}
+
+function getTouchCenter(touchA, touchB) {
+    return {
+        x: (touchA.clientX + touchB.clientX) / 2,
+        y: (touchA.clientY + touchB.clientY) / 2
+    };
+}
+
 // Make white/light pixels transparent on outline canvas
 function makeWhiteTransparent() {
     const imageData = outlineCtx.getImageData(0, 0, outlineCanvas.width, outlineCanvas.height);
@@ -973,10 +1038,12 @@ function setupCanvasEvents() {
     canvas.removeEventListener('touchstart', handleTouchStart);
     canvas.removeEventListener('touchmove', handleTouchMove);
     canvas.removeEventListener('touchend', handleTouchEnd);
+    canvas.removeEventListener('touchcancel', handleTouchEnd);
 
-    canvas.addEventListener('touchstart', handleTouchStart);
-    canvas.addEventListener('touchmove', handleTouchMove);
-    canvas.addEventListener('touchend', handleTouchEnd);
+    canvas.addEventListener('touchstart', handleTouchStart, { passive: false });
+    canvas.addEventListener('touchmove', handleTouchMove, { passive: false });
+    canvas.addEventListener('touchend', handleTouchEnd, { passive: false });
+    canvas.addEventListener('touchcancel', handleTouchEnd, { passive: false });
 }
 
 function drawPlaceholderImage(name) {
@@ -1424,6 +1491,28 @@ function handleMouseUp() {
 }
 
 function handleTouchStart(e) {
+    if (e.touches.length >= 2) {
+        e.preventDefault();
+        if (isDrawing) {
+            clearStrokeRuntimeState();
+        }
+        isPinchZooming = true;
+        const touchA = e.touches[0];
+        const touchB = e.touches[1];
+        pinchStartDistance = getTouchDistance(touchA, touchB);
+        pinchStartScale = canvasZoomScale;
+        const center = getTouchCenter(touchA, touchB);
+        pinchStartCenterX = center.x;
+        pinchStartCenterY = center.y;
+        pinchStartOffsetX = canvasZoomOffsetX;
+        pinchStartOffsetY = canvasZoomOffsetY;
+        return;
+    }
+
+    if (isPinchZooming) {
+        return;
+    }
+
     e.preventDefault();
     const touch = e.touches[0];
     const mouseEvent = new MouseEvent('mousedown', {
@@ -1434,6 +1523,40 @@ function handleTouchStart(e) {
 }
 
 function handleTouchMove(e) {
+    if (e.touches.length >= 2) {
+        e.preventDefault();
+        const touchA = e.touches[0];
+        const touchB = e.touches[1];
+
+        if (!isPinchZooming) {
+            isPinchZooming = true;
+            pinchStartDistance = getTouchDistance(touchA, touchB);
+            pinchStartScale = canvasZoomScale;
+            const startCenter = getTouchCenter(touchA, touchB);
+            pinchStartCenterX = startCenter.x;
+            pinchStartCenterY = startCenter.y;
+            pinchStartOffsetX = canvasZoomOffsetX;
+            pinchStartOffsetY = canvasZoomOffsetY;
+            return;
+        }
+
+        const distance = getTouchDistance(touchA, touchB);
+        if (pinchStartDistance > 0) {
+            canvasZoomScale = pinchStartScale * (distance / pinchStartDistance);
+        }
+
+        const center = getTouchCenter(touchA, touchB);
+        canvasZoomOffsetX = pinchStartOffsetX + (center.x - pinchStartCenterX);
+        canvasZoomOffsetY = pinchStartOffsetY + (center.y - pinchStartCenterY);
+        applyCanvasZoomTransform();
+        return;
+    }
+
+    if (isPinchZooming) {
+        e.preventDefault();
+        return;
+    }
+
     e.preventDefault();
     const touch = e.touches[0];
     const mouseEvent = new MouseEvent('mousemove', {
@@ -1444,6 +1567,25 @@ function handleTouchMove(e) {
 }
 
 function handleTouchEnd(e) {
+    if (isPinchZooming) {
+        e.preventDefault();
+        if (e.touches.length >= 2) {
+            const touchA = e.touches[0];
+            const touchB = e.touches[1];
+            pinchStartDistance = getTouchDistance(touchA, touchB);
+            pinchStartScale = canvasZoomScale;
+            const center = getTouchCenter(touchA, touchB);
+            pinchStartCenterX = center.x;
+            pinchStartCenterY = center.y;
+            pinchStartOffsetX = canvasZoomOffsetX;
+            pinchStartOffsetY = canvasZoomOffsetY;
+            return;
+        }
+        isPinchZooming = false;
+        clearStrokeRuntimeState();
+        return;
+    }
+
     e.preventDefault();
     canvas.dispatchEvent(new MouseEvent('mouseup'));
 }
