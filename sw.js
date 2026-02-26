@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'coloring-app-v20260222zg';
+const CACHE_VERSION = 'coloring-app-v20260226colors96';
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 
@@ -8,6 +8,7 @@ const STATIC_ASSETS = [
     './styles.css',
     './manifest.webmanifest',
     './favicon.svg',
+    './hanrabong.png',
     './icons/icon-192.png',
     './icons/icon-512.png'
 ];

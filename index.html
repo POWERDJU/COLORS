@@ -17,7 +17,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css?v=20260222zg">
+    <link rel="stylesheet" href="styles.css?v=20260226colors96">
 </head>
 
 <body>
@@ -68,6 +68,15 @@
                 <span>🖼️</span> 다른 그림 색칠
             </label>
             <input id="custom-image-input" class="custom-upload-input" type="file" accept="image/*" onchange="handleCustomImageUpload(event)" oninput="handleCustomImageUpload(event)">
+        </div>
+        <div class="farm-link-wrap">
+            <a class="farm-link-card" href="https://smartstore.naver.com/changjulove" target="_blank" rel="noopener noreferrer">
+                <img src="hanrabong.png" alt="창주농원 한라봉">
+                <span>창주농원 한라봉 링크</span>
+            </a>
+            <p class="farm-link-note">
+                이 프로그램은 창주농원에서 모든 어린이를 위하여 제작하였으며, 자유롭게 배포 및 사용하시기 바랍니다
+            </p>
         </div>
     </div>
 
@@ -161,7 +170,7 @@
                             </div>
                             <div class="color-pagination">
                                 <button class="color-page-btn" id="color-page-prev" onclick="changeColorPage(-1)" aria-label="이전 색상 페이지">&lt;</button>
-                                <span class="color-page-indicator" id="color-page-indicator">1/2</span>
+                                <span class="color-page-indicator" id="color-page-indicator">1/3</span>
                                 <button class="color-page-btn" id="color-page-next" onclick="changeColorPage(1)" aria-label="다음 색상 페이지">&gt;</button>
                             </div>
                         </div>
@@ -208,7 +217,7 @@
         </div>
     </div>
 
-    <script src="app.js?v=20260222zg"></script>
+    <script src="app.js?v=20260226colors96"></script>
 </body>
 
 </html>

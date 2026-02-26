@@ -45,16 +45,25 @@ const OUTLINE_THRESHOLD = 185;
 const OUTLINE_ALPHA_THRESHOLD = 24;
 
 
-// Extended color palette (64 colors): vivid primaries + pastel/watercolor tones
+// Extended color palette (96 colors): vivid + deep + pastel + partial grayscale
 const colors = [
-    '#FF0000', '#FF3B30', '#FF6B6B', '#E53935', '#C62828', '#B71C1C', '#FF1744', '#D50000',
-    '#FF6F00', '#FF8F00', '#FFA000', '#FFB300', '#FFC107', '#FFD54F', '#FF9800', '#FF7043',
-    '#FFFF00', '#FFEB3B', '#FDD835', '#FBC02D', '#F9A825', '#F57F17', '#FFF176', '#FFF59D',
-    '#00C853', '#00E676', '#2ECC71', '#4CAF50', '#43A047', '#388E3C', '#66BB6A', '#A5D6A7',
-    '#00BFA5', '#1DE9B6', '#26A69A', '#00ACC1', '#00BCD4', '#26C6DA', '#4DD0E1', '#80DEEA',
-    '#2962FF', '#2979FF', '#1E88E5', '#1565C0', '#0D47A1', '#3F51B5', '#5C6BC0', '#90CAF9',
-    '#651FFF', '#7C4DFF', '#8E24AA', '#9C27B0', '#AB47BC', '#BA68C8', '#CE93D8', '#E1BEE7',
-    '#FF4081', '#F50057', '#EC407A', '#F06292', '#F48FB1', '#8D6E63', '#A1887F', '#000000'
+    // Page 1: vivid primary spectrum
+    '#FF0000', '#FF1744', '#E53935', '#C62828', '#FF6F00', '#FF8F00', '#FF9800', '#FFB300',
+    '#FFD600', '#FFEA00', '#FDD835', '#FFEE58', '#AEEA00', '#64DD17', '#00C853', '#00E676',
+    '#00BFA5', '#1DE9B6', '#00E5FF', '#26C6DA', '#2979FF', '#2962FF', '#1E88E5', '#1565C0',
+    '#304FFE', '#651FFF', '#7C4DFF', '#AA00FF', '#D500F9', '#FF4081', '#F50057', '#E91E63',
+
+    // Page 2: deep/rich tones + neutrals
+    '#B71C1C', '#C2185B', '#880E4F', '#6A1B9A', '#4A148C', '#512DA8', '#303F9F', '#1A237E',
+    '#0D47A1', '#0277BD', '#006064', '#004D40', '#1B5E20', '#2E7D32', '#33691E', '#827717',
+    '#F57F17', '#F9A825', '#EF6C00', '#BF360C', '#A1887F', '#8D6E63', '#795548', '#6D4C41',
+    '#5D4037', '#4E342E', '#607D8B', '#546E7A', '#455A64', '#37474F', '#263238', '#000000',
+
+    // Page 3: pastel spectrum + grayscale accents
+    '#FFCDD2', '#F48FB1', '#CE93D8', '#B39DDB', '#9FA8DA', '#90CAF9', '#81D4FA', '#80DEEA',
+    '#80CBC4', '#A5D6A7', '#C5E1A5', '#E6EE9C', '#FFF59D', '#FFE082', '#FFCC80', '#FFAB91',
+    '#FF8A80', '#FF9E80', '#EA80FC', '#B388FF', '#8C9EFF', '#82B1FF', '#84FFFF', '#A7FFEB',
+    '#F5F5F5', '#E0E0E0', '#C6C6C6', '#ABABAB', '#8F8F8F', '#707070', '#4D4D4D', '#FFFFFF'
 ];
 
 // Glitter colors for sparkle effect
