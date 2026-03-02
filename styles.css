@@ -525,6 +525,9 @@ body {
 .tool-toolbar {
     background: transparent;
     padding: 0;
+    height: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
 }
 
 .tool-options-drawer {
@@ -770,6 +773,25 @@ body {
 
 .tool-btn.active label {
     color: white;
+}
+
+.tool-action-btn {
+    background: linear-gradient(135deg, #5f79dc 0%, #4f66c7 100%);
+    border-color: transparent;
+    color: #fff;
+}
+
+.tool-action-btn:hover:not(:disabled) {
+    background: linear-gradient(135deg, #6e88ea 0%, #5e74d6 100%);
+    transform: translateY(-2px);
+}
+
+.tool-action-btn:disabled {
+    opacity: 0.42;
+    cursor: default;
+    background: linear-gradient(135deg, #5f79dc 0%, #4f66c7 100%);
+    transform: none;
+    box-shadow: none;
 }
 
 /* ===== 스탬프 팔레트 ===== */

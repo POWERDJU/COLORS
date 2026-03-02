@@ -43,6 +43,9 @@ let currentColoringName = '';
 let customImageObjectUrl = null;
 const OUTLINE_THRESHOLD = 185;
 const OUTLINE_ALPHA_THRESHOLD = 24;
+const MAX_UNDO_HISTORY = 12;
+let undoHistory = [];
+let strokeHasPaint = false;
 
 
 // Extended color palette (96 colors): vivid + deep + pastel + partial grayscale
@@ -165,6 +168,7 @@ document.addEventListener('DOMContentLoaded', function () {
     initStampPalette();
     initBrushSizeSlider();
     initToolOptionsInteractions();
+    updateUndoButtonState();
     initPullToRefreshPrevention();
     const customImageInput = document.getElementById('custom-image-input');
     if (customImageInput) {
@@ -665,6 +669,8 @@ function initCanvas(imageData) {
 
         originalImage = ctx.getImageData(0, 0, canvas.width, canvas.height);
         strokeBaseImageData = null;
+        strokeHasPaint = false;
+        clearUndoHistory();
 
         setupCanvasEvents();
     };
@@ -692,6 +698,8 @@ function initCanvas(imageData) {
 
         originalImage = ctx.getImageData(0, 0, canvas.width, canvas.height);
         strokeBaseImageData = null;
+        strokeHasPaint = false;
+        clearUndoHistory();
 
         setupCanvasEvents();
     };
@@ -1222,12 +1230,16 @@ function clipRecentStrokeToRegion(x1, y1, x2, y2, extraPadding = 0) {
 }
 
 function clearStrokeRuntimeState() {
+    if (strokeHasPaint && strokeBaseImageData) {
+        pushUndoSnapshot(strokeBaseImageData);
+    }
     stopBlowPenLoop();
     isDrawing = false;
     currentRegionMask = null;
     currentRegionWidth = 0;
     currentRegionHeight = 0;
     strokeBaseImageData = null;
+    strokeHasPaint = false;
     rainbowProgress = 0;
     lastDrawX = null;
     lastDrawY = null;
@@ -1257,6 +1269,7 @@ function sprayBlowPen(centerX, centerY, deltaMs) {
     const minDotRadius = Math.max(1, brushSize * 0.03);
     const maxDotRadius = Math.max(2, brushSize * 0.12);
 
+    let hasDrawnDot = false;
     for (let i = 0; i < dotsThisFrame; i++) {
         const angle = Math.random() * Math.PI * 2;
         const distance = Math.sqrt(Math.random()) * radius;
@@ -1273,8 +1286,12 @@ function sprayBlowPen(centerX, centerY, deltaMs) {
         ctx.beginPath();
         ctx.arc(x, y, dotRadius, 0, Math.PI * 2);
         ctx.fill();
+        hasDrawnDot = true;
     }
 
+    if (hasDrawnDot) {
+        strokeHasPaint = true;
+    }
     const clipPad = Math.ceil(radius + maxDotRadius + 4);
     clipRecentStrokeToRegion(centerX, centerY, centerX, centerY, clipPad);
 }
@@ -1328,6 +1345,7 @@ function drawEmojiStamp(centerX, centerY) {
     // Limit stamp effect to current region and keep neighbor cells intact.
     const pad = Math.ceil(stampSize * 0.7);
     clipRecentStrokeToRegion(centerX, centerY, centerX, centerY, pad);
+    strokeHasPaint = true;
 }
 
 function drawPaintBomb(centerX, centerY) {
@@ -1412,6 +1430,7 @@ function drawPaintBomb(centerX, centerY) {
 
     const clipPad = Math.ceil(outerMax + baseRadius * 0.2 + 8);
     clipRecentStrokeToRegion(centerX, centerY, centerX, centerY, clipPad);
+    strokeHasPaint = true;
 }
 
 // ===== Event Handlers =====
@@ -1427,6 +1446,7 @@ function handleMouseDown(e) {
             return;
         }
 
+        strokeHasPaint = false;
         strokeBaseImageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
         drawPaintBomb(x, y);
         clearStrokeRuntimeState();
@@ -1444,6 +1464,7 @@ function handleMouseDown(e) {
             return;
         }
 
+        strokeHasPaint = false;
         strokeBaseImageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
         drawEmojiStamp(x, y);
         clearStrokeRuntimeState();
@@ -1463,8 +1484,10 @@ function handleMouseDown(e) {
             // If click lands on boundary or region detection fails, skip this stroke.
             isDrawing = false;
             strokeBaseImageData = null;
+            strokeHasPaint = false;
             return;
         }
+        strokeHasPaint = false;
         strokeBaseImageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
         if (currentTool === 'rainbow') {
             rainbowProgress = 0;
@@ -1627,17 +1650,20 @@ function draw(e) {
     if (currentTool === 'glitter') {
         // Draw glitter effect instead of normal stroke
         drawGlitter(x, y);
+        strokeHasPaint = true;
         if (lastDrawX !== null && lastDrawY !== null) {
             clipRecentStrokeToRegion(lastDrawX, lastDrawY, x, y, 8);
         }
     } else if (currentTool === 'marker') {
         if (lastDrawX !== null && lastDrawY !== null) {
             drawMarkerSegment(lastDrawX, lastDrawY, x, y);
+            strokeHasPaint = true;
             clipRecentStrokeToRegion(lastDrawX, lastDrawY, x, y, 4);
         }
     } else if (currentTool === 'rainbow') {
         if (lastDrawX !== null && lastDrawY !== null) {
             drawRainbowSegment(lastDrawX, lastDrawY, x, y);
+            strokeHasPaint = true;
             clipRecentStrokeToRegion(lastDrawX, lastDrawY, x, y);
         }
     } else {
@@ -1653,6 +1679,7 @@ function draw(e) {
 
         ctx.lineTo(x, y);
         ctx.stroke();
+        strokeHasPaint = true;
         if (lastDrawX !== null && lastDrawY !== null) {
             clipRecentStrokeToRegion(lastDrawX, lastDrawY, x, y);
         }
@@ -2034,12 +2061,66 @@ function selectStampEmoji(emoji) {
     markToolOptionCompleted('stamp');
 }
 
+function pushUndoSnapshot(imageData) {
+    if (!imageData) return;
+    undoHistory.push(imageData);
+    if (undoHistory.length > MAX_UNDO_HISTORY) {
+        undoHistory.shift();
+    }
+    updateUndoButtonState();
+}
+
+function clearUndoHistory() {
+    undoHistory = [];
+    updateUndoButtonState();
+}
+
+function updateUndoButtonState() {
+    const undoBtn = document.getElementById('undo-action-btn');
+    if (!undoBtn) return;
+    undoBtn.disabled = undoHistory.length === 0;
+}
+
+function undoLastAction() {
+    if (!ctx || undoHistory.length === 0) return;
+    stopBlowPenLoop();
+    isDrawing = false;
+    currentRegionMask = null;
+    currentRegionWidth = 0;
+    currentRegionHeight = 0;
+    strokeBaseImageData = null;
+    strokeHasPaint = false;
+    rainbowProgress = 0;
+    lastDrawX = null;
+    lastDrawY = null;
+    ctx.beginPath();
+
+    const prevSnapshot = undoHistory.pop();
+    if (!prevSnapshot) {
+        updateUndoButtonState();
+        return;
+    }
+    ctx.putImageData(prevSnapshot, 0, 0);
+    updateUndoButtonState();
+}
+
 
 // ===== Canvas Reset =====
 function resetCanvas() {
     if (originalImage && confirm('처음부터 다시 색칠할까요?')) {
-        ctx.putImageData(originalImage, 0, 0);
+        stopBlowPenLoop();
+        isDrawing = false;
+        currentRegionMask = null;
+        currentRegionWidth = 0;
+        currentRegionHeight = 0;
         strokeBaseImageData = null;
+        strokeHasPaint = false;
+        rainbowProgress = 0;
+        lastDrawX = null;
+        lastDrawY = null;
+        ctx.beginPath();
+        ctx.putImageData(originalImage, 0, 0);
+        clearUndoHistory();
     }
 }
 
